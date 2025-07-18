@@ -1,0 +1,34 @@
+version: 1
+
+on:
+  pull_request:
+    branches:
+      - feature/.*
+      - bug/.*
+      - hotfix/.*
+      - release/.*
+      - main
+
+environment:
+  php: 8.2
+  node: 18
+
+services:
+  - postgres: 13
+  - redis:
+
+pipeline:
+  - name: Setup
+    cmd: |
+      cp -v .env.example .env
+      composer install --no-interaction --prefer-dist --optimize-autoloader
+      php artisan key:generate
+
+  - name: Compile Dev Assets
+    cmd: |
+      npm ci --no-audit
+      npm run build # Vite
+      # npm run dev # Mix
+
+  - name: Run Tests
+    cmd: phpunit
