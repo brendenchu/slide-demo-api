@@ -148,7 +148,7 @@ class ProjectService
         )->get();
 
         // cast each response value to the correct type
-        $responses->transform(fn ($response) => $this->castResponseValue($response));
+        $responses->transform(fn (Response $response): Response => $this->castResponseValue($response));
 
         // return responses
         return $responses;
