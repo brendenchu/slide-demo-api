@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-  import { LogoutButton } from '@/Components/Story/v1/UI'
+  import { LogoutButton } from '@/Components/Story/Form/UI'
 
   defineProps<{
     title?: string

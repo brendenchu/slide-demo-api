@@ -9,10 +9,10 @@
     SectionBFormFields,
     SectionCFormFields,
   } from '@/types'
-  import { IntroForm, SectionAForm, SectionBForm, SectionCForm } from '@/Components/Story/v1/Forms'
+  import { IntroForm, SectionAForm, SectionBForm, SectionCForm } from '@/Components/Story/Form/Forms'
   import { Direction } from '@/Components/Slide/types'
   import StoryLayout from '@/Layouts/StoryLayout.vue'
-  import { ProgressBar, ProgressTimeline } from '@/Components/Story/v1/UI'
+  import { ProgressBar, ProgressTimeline } from '@/Components/Story/Form/UI'
 
   defineProps<{
     project: Project

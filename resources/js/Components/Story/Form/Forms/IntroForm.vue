@@ -5,7 +5,7 @@
   import { onMounted, ref } from 'vue'
   import { IntroFormFields, Project, ProjectStep } from '@/types'
   import { Action, Direction, SlideOptions } from '@/Components/Slide/types'
-  import { delay, delta, nullifyFields, prevNextSteps, saveForm } from '@/Components/Story/v1/helpers'
+  import { delay, delta, nullifyFields, prevNextSteps, saveForm } from '@/Components/Story/Form/helpers'
 
   // The component's props
   const props = defineProps<{

@@ -3,7 +3,7 @@
   import StoryLayout from '@/Layouts/StoryLayout.vue'
   import { Project, ProjectStep } from '@/types'
   import PrimaryButton from '@/Components/PrimaryButton.vue'
-  import { ProgressBar, ProgressTimeline } from '@/Components/Story/v1/UI'
+  import { ProgressBar, ProgressTimeline } from '@/Components/Story/Form/UI'
 
   const props = defineProps<{
     project: Project
