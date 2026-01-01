@@ -27,6 +27,8 @@ class Project extends Model
         'key',
         'label',
         'description',
+        'step',
+        'value',
     ];
 
     /**

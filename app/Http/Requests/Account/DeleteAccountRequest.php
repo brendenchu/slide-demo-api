@@ -2,11 +2,9 @@
 
 namespace App\Http\Requests\Account;
 
-use App\Models\Account\Team;
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class SelectTeamRequest extends FormRequest
+class DeleteAccountRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -19,12 +17,12 @@ class SelectTeamRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, ValidationRule|array|string>
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
-            'team' => ['required', 'exists:' . Team::class . ',key'],
+            'password' => ['required', 'current_password'],
         ];
     }
 }

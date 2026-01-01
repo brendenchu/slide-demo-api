@@ -1,18 +1,20 @@
 <?php
 
-namespace App\Http\Requests\Account;
+namespace App\Http\Requests\Auth;
 
+use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\Password;
 
-class StoreProfileRequest extends FormRequest
+class RegisterUserRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -23,7 +25,10 @@ class StoreProfileRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:' . User::class],
+            'password' => ['required', 'confirmed', Password::defaults()],
         ];
     }
 }

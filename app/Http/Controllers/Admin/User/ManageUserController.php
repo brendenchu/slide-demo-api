@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Admin\User;
 
+use App\Http\Requests\Admin\CreateUserRequest;
 use App\Http\Resources\Story\TokenResource;
 use App\Http\Resources\UserResource;
 use App\Models\Account\Profile;
 use Exception;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -45,22 +45,14 @@ class ManageUserController extends BaseUserController
     /**
      * @throws Exception
      */
-    public function store(Request $request)
+    public function store(CreateUserRequest $request)
     {
-        // validate the request
-        $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'role' => 'required|string|exists:roles,name',
-        ]);
-
         // create the user
-        $this->accountService->createUser($validated);
+        $this->accountService->createUser($request->validated());
 
         // send the password reset link
         $status = Password::sendResetLink(
-            $request->only('email')
+            $request->validated()
         );
 
         // redirect back with status

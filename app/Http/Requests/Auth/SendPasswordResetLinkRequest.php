@@ -1,18 +1,18 @@
 <?php
 
-namespace App\Http\Requests\Account;
+namespace App\Http\Requests\Auth;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateTeamRequest extends FormRequest
+class SendPasswordResetLinkRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -23,7 +23,7 @@ class UpdateTeamRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'email' => ['required', 'email'],
         ];
     }
 }

@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Admin\User;
 
+use App\Http\Requests\Admin\SearchUserRequest;
 use Exception;
-use Illuminate\Http\Request;
 
 class SearchUserController extends BaseUserController
 {
@@ -11,15 +11,9 @@ class SearchUserController extends BaseUserController
      * @throws Exception
      */
     public function __invoke(
-        Request $request
+        SearchUserRequest $request
     ) {
-        $validated = $request->validate([
-            'email' => 'required|email|exists:users,email',
-        ], [
-            'email.exists' => 'The user does not exist.',
-        ]);
-
-        $this->setupUserByIdentifier($validated['email']);
+        $this->setupUserByIdentifier($request->email);
 
         // redirect to the user profile
         return to_route('admin.users.show', $this->user->profile->public_id);

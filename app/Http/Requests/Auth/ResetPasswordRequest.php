@@ -1,19 +1,19 @@
 <?php
 
-namespace App\Http\Requests\Account;
+namespace App\Http\Requests\Auth;
 
-use App\Models\Account\Team;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules;
 
-class SelectTeamRequest extends FormRequest
+class ResetPasswordRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return auth()->check();
+        return true;
     }
 
     /**
@@ -24,7 +24,9 @@ class SelectTeamRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'team' => ['required', 'exists:' . Team::class . ',key'],
+            'token' => ['required'],
+            'email' => ['required', 'email'],
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ];
     }
 }
