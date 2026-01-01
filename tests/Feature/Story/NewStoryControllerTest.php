@@ -11,11 +11,11 @@ use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->withoutMiddleware(EnsureTermsAreAccepted::class);
 });
 
-it('displays new story page when no draft exists', function () {
+it('displays new story page when no draft exists', function (): void {
     $user = User::factory()->create();
 
     $this->actingAs($user);
@@ -28,7 +28,7 @@ it('displays new story page when no draft exists', function () {
     );
 });
 
-it('redirects to continue page when draft token exists', function () {
+it('redirects to continue page when draft token exists', function (): void {
     $user = User::factory()->create();
     $team = Team::factory()->create();
     $project = Project::factory()->create(['status' => ProjectStatus::DRAFT]);
@@ -49,7 +49,7 @@ it('redirects to continue page when draft token exists', function () {
     ]));
 });
 
-it('bypasses expiration and revocation when checking for draft token', function () {
+it('bypasses expiration and revocation when checking for draft token', function (): void {
     $user = User::factory()->create();
     $team = Team::factory()->create();
     $project = Project::factory()->create(['status' => ProjectStatus::DRAFT]);
@@ -72,7 +72,7 @@ it('bypasses expiration and revocation when checking for draft token', function 
     ]));
 });
 
-it('creates new project and token when storing', function () {
+it('creates new project and token when storing', function (): void {
     $user = User::factory()->create();
     $team = Team::factory()->create();
     $user->teams()->attach($team);
@@ -99,7 +99,7 @@ it('creates new project and token when storing', function () {
     ]));
 });
 
-it('creates project with auto-generated name and description', function () {
+it('creates project with auto-generated name and description', function (): void {
     $user = User::factory()->create();
     $team = Team::factory()->create(['label' => 'Test Team']);
     $user->teams()->attach($team);
@@ -115,13 +115,13 @@ it('creates project with auto-generated name and description', function () {
         ->and($project->description)->toContain('Test Team');
 });
 
-it('requires authentication to create new story', function () {
+it('requires authentication to create new story', function (): void {
     $response = $this->get(route('story.create'));
 
     $response->assertRedirect(route('login'));
 });
 
-it('requires authentication to store new story', function () {
+it('requires authentication to store new story', function (): void {
     $response = $this->post(route('story.store'));
 
     $response->assertRedirect(route('login'));

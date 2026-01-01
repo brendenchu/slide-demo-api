@@ -11,11 +11,11 @@ use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->withoutMiddleware(EnsureTermsAreAccepted::class);
 });
 
-it('publishes a project successfully', function () {
+it('publishes a project successfully', function (): void {
     $user = User::factory()->create();
     $team = Team::factory()->create();
     $project = Project::factory()->create(['status' => ProjectStatus::DRAFT]);
@@ -41,7 +41,7 @@ it('publishes a project successfully', function () {
     expect($project->fresh()->status)->toBe(ProjectStatus::PUBLISHED);
 });
 
-it('saves last position to complete after publishing', function () {
+it('saves last position to complete after publishing', function (): void {
     $user = User::factory()->create();
     $team = Team::factory()->create();
     $project = Project::factory()->create(['status' => ProjectStatus::DRAFT]);
@@ -61,7 +61,7 @@ it('saves last position to complete after publishing', function () {
     expect($token->fresh()->setting('last_position')['step'])->toBe('complete');
 });
 
-it('redirects to complete page if project is already published', function () {
+it('redirects to complete page if project is already published', function (): void {
     $user = User::factory()->create();
     $team = Team::factory()->create();
     $project = Project::factory()->create();
@@ -88,7 +88,7 @@ it('redirects to complete page if project is already published', function () {
     $response->assertSessionHas('info', 'This project has already been submitted.');
 });
 
-it('redirects to create page when token is invalid', function () {
+it('redirects to create page when token is invalid', function (): void {
     $user = User::factory()->create();
     $team = Team::factory()->create();
     $project = Project::factory()->create(['status' => ProjectStatus::DRAFT]);
@@ -112,7 +112,7 @@ it('redirects to create page when token is invalid', function () {
     $response->assertSessionHas('error', 'User token is invalid.');
 });
 
-it('redirects to create page when token is revoked', function () {
+it('redirects to create page when token is revoked', function (): void {
     $user = User::factory()->create();
     $team = Team::factory()->create();
     $project = Project::factory()->create(['status' => ProjectStatus::DRAFT]);

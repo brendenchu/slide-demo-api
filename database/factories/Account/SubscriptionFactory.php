@@ -3,15 +3,16 @@
 namespace Database\Factories\Account;
 
 use App\Models\Account\Plan;
+use App\Models\Account\Subscription;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Account\Subscription>
+ * @extends Factory<Subscription>
  */
 class SubscriptionFactory extends Factory
 {
-    protected $model = \App\Models\Account\Subscription::class;
+    protected $model = Subscription::class;
 
     /**
      * Define the model's default state.
@@ -39,7 +40,7 @@ class SubscriptionFactory extends Factory
      */
     public function onTrial(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn (array $attributes): array => [
             'trial_ends_at' => now()->addDays(7),
         ]);
     }
@@ -49,7 +50,7 @@ class SubscriptionFactory extends Factory
      */
     public function canceled(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn (array $attributes): array => [
             'canceled_at' => now(),
             'status' => 'canceled',
         ]);
@@ -60,7 +61,7 @@ class SubscriptionFactory extends Factory
      */
     public function inactive(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn (array $attributes): array => [
             'status' => 'inactive',
         ]);
     }
@@ -70,7 +71,7 @@ class SubscriptionFactory extends Factory
      */
     public function expired(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn (array $attributes): array => [
             'ends_at' => now()->subDay(),
         ]);
     }

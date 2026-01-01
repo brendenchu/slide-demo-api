@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('account_subscriptions', function (Blueprint $table) {
+        Schema::table('account_subscriptions', function (Blueprint $table): void {
             $table->morphs('accountable');
             $table->foreignId('plan_id')->constrained('account_plans')->onDelete('cascade');
             $table->timestamp('trial_ends_at')->nullable();
@@ -29,7 +29,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('account_subscriptions', function (Blueprint $table) {
+        Schema::table('account_subscriptions', function (Blueprint $table): void {
             $table->dropMorphs('accountable');
             $table->dropForeign(['plan_id']);
             $table->dropColumn([

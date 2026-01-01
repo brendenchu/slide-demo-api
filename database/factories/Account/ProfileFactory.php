@@ -4,6 +4,7 @@ namespace Database\Factories\Account;
 
 use App\Models\Account\Profile;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * @extends Factory<Profile>
@@ -13,9 +14,9 @@ class ProfileFactory extends Factory
     /**
      * The name of the factory's corresponding model.
      *
-     * @var class-string<\Illuminate\Database\Eloquent\Model>
+     * @var class-string<Model>
      */
-    protected $model = \App\Models\Account\Profile::class;
+    protected $model = Profile::class;
 
     /**
      * Define the model's default state.

@@ -5,7 +5,7 @@ use App\Http\Controllers\Account\Terms\SetupTermsController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['verified', 'profile', 'team'])
-    ->group(function () {
+    ->group(function (): void {
 
         // Terms
         Route::get('accept-terms', SetupTermsController::class)->name('terms.setup');

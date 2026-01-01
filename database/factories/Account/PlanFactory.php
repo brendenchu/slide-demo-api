@@ -2,14 +2,15 @@
 
 namespace Database\Factories\Account;
 
+use App\Models\Account\Plan;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Account\Plan>
+ * @extends Factory<Plan>
  */
 class PlanFactory extends Factory
 {
-    protected $model = \App\Models\Account\Plan::class;
+    protected $model = Plan::class;
 
     /**
      * Define the model's default state.
@@ -36,7 +37,7 @@ class PlanFactory extends Factory
      */
     public function inactive(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn (array $attributes): array => [
             'is_active' => false,
         ]);
     }
@@ -46,7 +47,7 @@ class PlanFactory extends Factory
      */
     public function noTrial(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn (array $attributes): array => [
             'trial_period' => 0,
         ]);
     }

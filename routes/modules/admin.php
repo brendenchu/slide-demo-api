@@ -7,24 +7,22 @@ use App\Http\Controllers\Admin\User\ManageUserController;
 use App\Http\Controllers\Admin\User\SearchUserController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('role:super-admin')->group(function () {
+Route::middleware('role:super-admin')->group(function (): void {
     // future routes for super admin, like debugging tools, etc.
 });
 
 Route::middleware('role:admin|super-admin')
     ->prefix('admin')
     ->name('admin.')
-    ->group(function () {
+    ->group(function (): void {
         Route::get('/', AdminDashboardController::class)
             ->name('dashboard');
 
         // User Submodule
         Route::prefix('users')
             ->name('users.')
-            ->group(function () {
-                Route::get('/', function () {
-                    return to_route('admin.users.browse');
-                })->name('index');
+            ->group(function (): void {
+                Route::get('/', fn () => to_route('admin.users.browse'))->name('index');
 
                 // Browse Users
                 Route::get('browse', BrowseUsersController::class)

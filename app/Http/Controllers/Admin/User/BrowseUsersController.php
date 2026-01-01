@@ -33,13 +33,13 @@ class BrowseUsersController extends Controller
         $page = $request->input('page') ?? 1;
 
         $users = User::query()
-            ->when(! empty($validated['first_name']), function ($query) use ($validated) {
+            ->when(! empty($validated['first_name']), function ($query) use ($validated): void {
                 $query->whereHas('profile', fn ($q) => $q->where('first_name', $validated['first_name']));
             })
-            ->when(! empty($validated['last_name']), function ($query) use ($validated) {
+            ->when(! empty($validated['last_name']), function ($query) use ($validated): void {
                 $query->whereHas('profile', fn ($q) => $q->where('last_name', $validated['last_name']));
             })
-            ->when(! empty($validated['email']), function ($query) use ($validated) {
+            ->when(! empty($validated['email']), function ($query) use ($validated): void {
                 $query->where('email', $validated['email']);
             })
             ->with(['profile', 'teams', 'roles', 'permissions'])

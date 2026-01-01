@@ -12,7 +12,7 @@ trait HasPublicId
      */
     protected static function bootHasPublicId(): void
     {
-        static::creating(function ($model) {
+        static::creating(function ($model): void {
             $publicId = $model instanceof Uuidable ? Str::lower(Str::uuid()) : Str::random(12);
             $model->public_id = $publicId;
         });

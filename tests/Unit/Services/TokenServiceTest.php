@@ -10,7 +10,7 @@ use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
 
-it('sets token by instance', function () {
+it('sets token by instance', function (): void {
     $token = Token::factory()->create();
     $service = new TokenService;
 
@@ -19,7 +19,7 @@ it('sets token by instance', function () {
     expect($result)->toBeInstanceOf(TokenService::class);
 });
 
-it('sets token by public_id string', function () {
+it('sets token by public_id string', function (): void {
     $token = Token::factory()->create();
     $service = new TokenService;
 
@@ -28,7 +28,7 @@ it('sets token by public_id string', function () {
     expect($result)->toBeInstanceOf(TokenService::class);
 });
 
-it('gets token for project and user', function () {
+it('gets token for project and user', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create();
     $token = Token::factory()->create([
@@ -43,7 +43,7 @@ it('gets token for project and user', function () {
         ->and($result->id)->toBe($token->id);
 });
 
-it('gets token using authenticated user when user is null', function () {
+it('gets token using authenticated user when user is null', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create();
     $token = Token::factory()->create([
@@ -59,7 +59,7 @@ it('gets token using authenticated user when user is null', function () {
         ->and($result->id)->toBe($token->id);
 });
 
-it('does not get revoked tokens by default', function () {
+it('does not get revoked tokens by default', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create();
     Token::factory()->revoked()->create([
@@ -73,7 +73,7 @@ it('does not get revoked tokens by default', function () {
     expect($result)->toBeNull();
 });
 
-it('verifies token exists', function () {
+it('verifies token exists', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create();
     Token::factory()->create([
@@ -87,7 +87,7 @@ it('verifies token exists', function () {
     expect($result)->toBeTrue();
 });
 
-it('verifies token does not exist', function () {
+it('verifies token does not exist', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create();
 
@@ -97,7 +97,7 @@ it('verifies token does not exist', function () {
     expect($result)->toBeFalse();
 });
 
-it('creates token with correct expiration', function () {
+it('creates token with correct expiration', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create();
 
@@ -114,7 +114,7 @@ it('creates token with correct expiration', function () {
         ->and($daysDiff)->toBeLessThan(8);
 });
 
-it('creates token using authenticated user when user is null', function () {
+it('creates token using authenticated user when user is null', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create();
 
@@ -125,7 +125,7 @@ it('creates token using authenticated user when user is null', function () {
     expect($token->user_id)->toBe($user->id);
 });
 
-it('saves last position to session and token settings', function () {
+it('saves last position to session and token settings', function (): void {
     $token = Token::factory()->create();
     $service = new TokenService;
     $service->setToken($token);
@@ -142,13 +142,13 @@ it('saves last position to session and token settings', function () {
         ]);
 });
 
-it('throws exception when saving position without token', function () {
+it('throws exception when saving position without token', function (): void {
     $service = new TokenService;
 
     expect(fn () => $service->saveLastPosition('intro', 1))->toThrow(Exception::class, 'No token set.');
 });
 
-it('bypasses expiration and returns self', function () {
+it('bypasses expiration and returns self', function (): void {
     $service = new TokenService;
 
     $result = $service->bypassExpiration();
@@ -156,7 +156,7 @@ it('bypasses expiration and returns self', function () {
     expect($result)->toBeInstanceOf(TokenService::class);
 });
 
-it('bypasses revocation and returns self', function () {
+it('bypasses revocation and returns self', function (): void {
     $service = new TokenService;
 
     $result = $service->bypassRevocation();
@@ -164,7 +164,7 @@ it('bypasses revocation and returns self', function () {
     expect($result)->toBeInstanceOf(TokenService::class);
 });
 
-it('gets revoked tokens when bypass is enabled', function () {
+it('gets revoked tokens when bypass is enabled', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create();
     $token = Token::factory()->revoked()->create([
@@ -179,7 +179,7 @@ it('gets revoked tokens when bypass is enabled', function () {
         ->and($result->id)->toBe($token->id);
 });
 
-it('gets token by project status', function () {
+it('gets token by project status', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create();
     $project->status = ProjectStatus::PUBLISHED;
@@ -197,7 +197,7 @@ it('gets token by project status', function () {
         ->and($result->id)->toBe($token->id);
 });
 
-it('gets latest token by project status', function () {
+it('gets latest token by project status', function (): void {
     $user = User::factory()->create();
     $project1 = Project::factory()->create();
     $project1->status = ProjectStatus::PUBLISHED;
@@ -227,7 +227,7 @@ it('gets latest token by project status', function () {
         ->and($result->project->status)->toBe(ProjectStatus::PUBLISHED);
 });
 
-it('checks if token is expired', function () {
+it('checks if token is expired', function (): void {
     $token = Token::factory()->expired()->create();
     $service = new TokenService;
     $service->setToken($token);
@@ -235,7 +235,7 @@ it('checks if token is expired', function () {
     expect($service->isExpired())->toBeTrue();
 });
 
-it('checks if token is not expired', function () {
+it('checks if token is not expired', function (): void {
     $token = Token::factory()->create();
     $service = new TokenService;
     $service->setToken($token);
@@ -243,7 +243,7 @@ it('checks if token is not expired', function () {
     expect($service->isExpired())->toBeFalse();
 });
 
-it('checks if token is revoked', function () {
+it('checks if token is revoked', function (): void {
     $token = Token::factory()->revoked()->create();
     $service = new TokenService;
     $service->setToken($token);
@@ -251,7 +251,7 @@ it('checks if token is revoked', function () {
     expect($service->isRevoked())->toBeTrue();
 });
 
-it('checks if token is not revoked', function () {
+it('checks if token is not revoked', function (): void {
     $token = Token::factory()->create();
     $service = new TokenService;
     $service->setToken($token);
@@ -259,7 +259,7 @@ it('checks if token is not revoked', function () {
     expect($service->isRevoked())->toBeFalse();
 });
 
-it('refreshes token by revoking old and creating new', function () {
+it('refreshes token by revoking old and creating new', function (): void {
     $user = User::factory()->create();
     $this->actingAs($user);
 
@@ -280,13 +280,13 @@ it('refreshes token by revoking old and creating new', function () {
         ->and($newToken->user_id)->toBe($oldToken->user_id);
 });
 
-it('throws exception when refreshing without token', function () {
+it('throws exception when refreshing without token', function (): void {
     $service = new TokenService;
 
-    expect(fn () => $service->refreshToken())->toThrow(Exception::class, 'No token set.');
+    expect(fn (): Token => $service->refreshToken())->toThrow(Exception::class, 'No token set.');
 });
 
-it('has token returns token as alias', function () {
+it('has token returns token as alias', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create();
     $token = Token::factory()->create([

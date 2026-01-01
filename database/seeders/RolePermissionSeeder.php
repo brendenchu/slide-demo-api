@@ -262,7 +262,7 @@ class RolePermissionSeeder extends Seeder
         $draftProject->teams()->attach($client1->teams()->first());
 
         // Create token and partial responses for draft project
-        $draftToken = Token::factory()->create([
+        Token::factory()->create([
             'user_id' => $client1->id,
             'project_id' => $draftProject->id,
             'settings' => [
@@ -289,7 +289,7 @@ class RolePermissionSeeder extends Seeder
         $publishedProject1->save();
         $publishedProject1->teams()->attach($client1->teams()->first());
 
-        $publishedToken1 = Token::factory()->create([
+        Token::factory()->create([
             'user_id' => $client1->id,
             'project_id' => $publishedProject1->id,
             'settings' => [

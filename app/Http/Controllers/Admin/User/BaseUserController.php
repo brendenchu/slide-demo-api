@@ -41,17 +41,15 @@ class BaseUserController extends Controller
         $this->projects = $this->projectService->getProjectsByTeam($this->user->currentTeam());
 
         // get the tokens that belong to the user
-        $this->projects->each(function ($project) {
+        $this->projects->each(function ($project): void {
             // push existing tokens to the tokens collection
             if ($existingTokens = $project->tokens()->where('user_id', auth()->id())->first()) {
                 $this->tokens->push($existingTokens);
             }
 
             // push new tokens to the tokens collection for user that is not the current user
-            if ($this->user !== auth()->user()) {
-                if (! $this->tokenService->hasToken($project) && $this->tokenService->hasToken($project, $this->user)) {
-                    $this->tokens->push($this->tokenService->createToken($project));
-                }
+            if ($this->user !== auth()->user() && (! $this->tokenService->hasToken($project) && $this->tokenService->hasToken($project, $this->user))) {
+                $this->tokens->push($this->tokenService->createToken($project));
             }
 
         });

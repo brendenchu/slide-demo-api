@@ -6,6 +6,7 @@ use App\Enums\Story\ProjectStatus;
 use App\Enums\Story\ProjectStep;
 use App\Models\Account\Team;
 use App\Models\Story\Project;
+use App\Models\Story\Response;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
@@ -74,11 +75,7 @@ class ProjectService
     public function setSteps(ProjectStep|string ...$steps): self
     {
         foreach ($steps as $step) {
-            if ($step instanceof ProjectStep) {
-                $this->steps[] = $step;
-            } else {
-                $this->steps[] = ProjectStep::from($step);
-            }
+            $this->steps[] = $step instanceof ProjectStep ? $step : ProjectStep::from($step);
         }
 
         return $this;
@@ -97,7 +94,7 @@ class ProjectService
      */
     public function createProject(Team $team, array $validated = []): Project
     {
-        if (empty($validated)) {
+        if ($validated === []) {
             $validated = [
                 'name' => 'My Project - ' . Carbon::now()->format('Y-m-d H:i:s'),
                 'description' => 'This is a form submission for ' . $team->label . '.',
@@ -164,11 +161,8 @@ class ProjectService
      * - Numeric strings with decimals → float
      * - Numeric strings without decimals → int
      * - Boolean values → true
-     *
-     * @param  \App\Models\Story\Response  $response  The response model to cast
-     * @return \App\Models\Story\Response The response with cast value
      */
-    private function castResponseValue($response)
+    private function castResponseValue(Response $response): Response
     {
         if (is_numeric($response->value)) {
             // has decimal, cast as float, otherwise cast as int

@@ -2,7 +2,7 @@
 
 use App\Enums\Role;
 
-it('has all role cases defined', function () {
+it('has all role cases defined', function (): void {
     $roles = Role::cases();
 
     expect($roles)->toHaveCount(5)
@@ -13,7 +13,7 @@ it('has all role cases defined', function () {
         ->and($roles)->toContain(Role::Guest);
 });
 
-it('returns correct label for each role', function (Role $role, string $expectedLabel) {
+it('returns correct label for each role', function (Role $role, string $expectedLabel): void {
     expect($role->label())->toBe($expectedLabel);
 })->with([
     [Role::SuperAdmin, 'Super Admin'],
@@ -23,17 +23,17 @@ it('returns correct label for each role', function (Role $role, string $expected
     [Role::Guest, 'Guest'],
 ]);
 
-it('guest role has a label', function () {
+it('guest role has a label', function (): void {
     expect(Role::Guest->label())->toBe('Guest');
 });
 
-it('all roles have labels', function () {
+it('all roles have labels', function (): void {
     foreach (Role::cases() as $role) {
         expect($role->label())->toBeString()->not->toBeEmpty();
     }
 });
 
-it('returns all instances via getInstances method', function () {
+it('returns all instances via getInstances method', function (): void {
     $instances = Role::getInstances();
 
     expect($instances)->toHaveCount(5)

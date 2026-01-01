@@ -9,7 +9,7 @@ use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     // Create roles
     foreach (Role::cases() as $role) {
         SpatieRole::create(['name' => $role->value, 'guard_name' => 'web']);
@@ -24,7 +24,7 @@ beforeEach(function () {
     $this->guestUser->assignRole(Role::Guest);
 });
 
-it('allows login with guest alias', function () {
+it('allows login with guest alias', function (): void {
     $response = $this->post('/login', [
         'email' => 'guest',
         'password' => 'guest',
@@ -34,7 +34,7 @@ it('allows login with guest alias', function () {
     $this->assertAuthenticatedAs($this->guestUser);
 });
 
-it('allows login with full guest email', function () {
+it('allows login with full guest email', function (): void {
     $response = $this->post('/login', [
         'email' => 'guest@example.com',
         'password' => 'guest',
@@ -44,7 +44,7 @@ it('allows login with full guest email', function () {
     $this->assertAuthenticatedAs($this->guestUser);
 });
 
-it('handles case-insensitive guest alias', function (string $alias) {
+it('handles case-insensitive guest alias', function (string $alias): void {
     $response = $this->post('/login', [
         'email' => $alias,
         'password' => 'guest',
@@ -59,7 +59,7 @@ it('handles case-insensitive guest alias', function (string $alias) {
     'mixedcase' => 'gUeSt',
 ]);
 
-it('handles guest alias with whitespace', function () {
+it('handles guest alias with whitespace', function (): void {
     $response = $this->post('/login', [
         'email' => '  guest  ',
         'password' => 'guest',
@@ -69,7 +69,7 @@ it('handles guest alias with whitespace', function () {
     $this->assertAuthenticatedAs($this->guestUser);
 });
 
-it('rejects guest login with wrong password', function () {
+it('rejects guest login with wrong password', function (): void {
     $response = $this->post('/login', [
         'email' => 'guest',
         'password' => 'wrong-password',
@@ -79,7 +79,7 @@ it('rejects guest login with wrong password', function () {
     $this->assertGuest();
 });
 
-it('applies rate limiting to guest alias', function () {
+it('applies rate limiting to guest alias', function (): void {
     RateLimiter::clear('guest@example.com|127.0.0.1');
 
     // Make 5 failed attempts (the limit)
@@ -101,7 +101,7 @@ it('applies rate limiting to guest alias', function () {
         ->toContain('Too many login attempts');
 });
 
-it('allows normal email login for non-guest users', function () {
+it('allows normal email login for non-guest users', function (): void {
     $user = User::factory()->create([
         'email' => 'regular@example.com',
         'password' => bcrypt('password'),
@@ -117,7 +117,7 @@ it('allows normal email login for non-guest users', function () {
     $this->assertAuthenticatedAs($user);
 });
 
-it('rejects invalid credentials for non-guest users', function () {
+it('rejects invalid credentials for non-guest users', function (): void {
     $user = User::factory()->create([
         'email' => 'regular@example.com',
         'password' => bcrypt('password'),

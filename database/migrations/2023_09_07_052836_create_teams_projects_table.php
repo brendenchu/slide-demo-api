@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('teams_projects', function (Blueprint $table) {
+        Schema::create('teams_projects', function (Blueprint $table): void {
             $table->foreignId('team_id')->constrained()->onDelete('cascade');
             $table->foreignId('project_id')->constrained()->onDelete('cascade');
             $table->timestamps();

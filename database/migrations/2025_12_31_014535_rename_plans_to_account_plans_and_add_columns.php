@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::rename('plans', 'account_plans');
 
-        Schema::table('account_plans', function (Blueprint $table) {
+        Schema::table('account_plans', function (Blueprint $table): void {
             $table->string('name');
             $table->string('slug')->unique();
             $table->text('description')->nullable();
@@ -31,7 +31,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('account_plans', function (Blueprint $table) {
+        Schema::table('account_plans', function (Blueprint $table): void {
             $table->dropColumn([
                 'name',
                 'slug',

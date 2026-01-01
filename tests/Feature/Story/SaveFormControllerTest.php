@@ -8,27 +8,27 @@ use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     // Create roles in database for tests
     foreach (Role::cases() as $role) {
         SpatieRole::create(['name' => $role->value, 'guard_name' => 'web']);
     }
 });
 
-it('requires authentication', function () {
+it('requires authentication', function (): void {
     $response = $this->postJson('/form/save-responses', []);
 
     $response->assertUnauthorized();
 });
 
-it('user can be assigned client role', function () {
+it('user can be assigned client role', function (): void {
     $user = User::factory()->create();
     $user->assignRole(Role::Client);
 
     expect($user->hasRole('client'))->toBeTrue();
 });
 
-it('user can be assigned guest role', function () {
+it('user can be assigned guest role', function (): void {
     $user = User::factory()->create();
     $user->assignRole(Role::Guest);
 
@@ -38,7 +38,7 @@ it('user can be assigned guest role', function () {
     expect($user->hasRole('guest'))->toBeTrue();
 });
 
-it('controller returns json response structure', function () {
+it('controller returns json response structure', function (): void {
     // Verify the controller's response handling
     // Full integration test would require complete project/token setup
     $user = User::factory()->create();

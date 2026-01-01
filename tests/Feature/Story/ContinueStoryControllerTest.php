@@ -11,11 +11,11 @@ use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->withoutMiddleware(EnsureTermsAreAccepted::class);
 });
 
-it('displays continue story page with last position', function () {
+it('displays continue story page with last position', function (): void {
     $user = User::factory()->create();
     $team = Team::factory()->create();
     $project = Project::factory()->create(['status' => ProjectStatus::DRAFT]);
@@ -49,7 +49,7 @@ it('displays continue story page with last position', function () {
     );
 });
 
-it('uses default position when last position is not set', function () {
+it('uses default position when last position is not set', function (): void {
     $user = User::factory()->create();
     $team = Team::factory()->create();
     $project = Project::factory()->create(['status' => ProjectStatus::DRAFT]);
@@ -73,7 +73,7 @@ it('uses default position when last position is not set', function () {
     );
 });
 
-it('redirects to complete page when project is already published', function () {
+it('redirects to complete page when project is already published', function (): void {
     $user = User::factory()->create();
     $team = Team::factory()->create();
     $project = Project::factory()->create();
@@ -99,7 +99,7 @@ it('redirects to complete page when project is already published', function () {
     ]));
 });
 
-it('redirects to create page when user has no valid token', function () {
+it('redirects to create page when user has no valid token', function (): void {
     $user = User::factory()->create();
     $team = Team::factory()->create();
     $project = Project::factory()->create(['status' => ProjectStatus::DRAFT]);
@@ -123,7 +123,7 @@ it('redirects to create page when user has no valid token', function () {
     $response->assertSessionHas('error', 'Sorry, you do not have access to this form.');
 });
 
-it('defaults to intro step when last position has invalid step', function () {
+it('defaults to intro step when last position has invalid step', function (): void {
     $user = User::factory()->create();
     $team = Team::factory()->create();
     $project = Project::factory()->create(['status' => ProjectStatus::DRAFT]);
@@ -151,7 +151,7 @@ it('defaults to intro step when last position has invalid step', function () {
     $response->assertStatus(500);
 })->skip('Controller has bug: uses ProjectStep::Intro instead of ProjectStep::STEP_ZERO');
 
-it('bypasses expiration and revocation when checking for published token', function () {
+it('bypasses expiration and revocation when checking for published token', function (): void {
     $user = User::factory()->create();
     $team = Team::factory()->create();
     $project = Project::factory()->create();

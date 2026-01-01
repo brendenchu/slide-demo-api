@@ -8,15 +8,16 @@ use App\Models\Story\Project;
 use App\Models\Story\Token;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->withoutMiddleware(EnsureTermsAreAccepted::class);
 });
 
-it('completes full story workflow from creation to publication', function () {
+it('completes full story workflow from creation to publication', function (): void {
     // Setup: Create a user with a team
     $user = User::factory()->create();
     $team = Team::factory()->create(['label' => 'Integration Test Team']);
@@ -110,7 +111,7 @@ it('completes full story workflow from creation to publication', function () {
     expect($token->fresh()->setting('last_position')['step'])->toBe('complete');
 });
 
-it('prevents saving responses for guest users', function () {
+it('prevents saving responses for guest users', function (): void {
     $user = User::factory()->create();
     $team = Team::factory()->create();
     $user->teams()->attach($team);
@@ -124,7 +125,7 @@ it('prevents saving responses for guest users', function () {
     ]);
 
     // Create and assign guest role to user
-    \Spatie\Permission\Models\Role::create(['name' => 'guest']);
+    Role::create(['name' => 'guest']);
     $user->assignRole('guest');
 
     $this->actingAs($user);
@@ -149,7 +150,7 @@ it('prevents saving responses for guest users', function () {
     expect($project->responses()->count())->toBe(0);
 });
 
-it('allows resuming story from last saved position', function () {
+it('allows resuming story from last saved position', function (): void {
     $user = User::factory()->create();
     $team = Team::factory()->create();
     $user->teams()->attach($team);

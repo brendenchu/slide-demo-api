@@ -6,7 +6,6 @@ use App\Models\Account\Profile;
 use App\Models\Account\Terms\Agreement;
 use App\Models\User;
 use Exception;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 

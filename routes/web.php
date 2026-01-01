@@ -22,7 +22,7 @@ Route::get('/', function () {
     return Redirect::route('login');
 })->name('home');
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:sanctum')->group(function (): void {
 
     // Admin Module
     require __DIR__ . '/modules/admin.php';

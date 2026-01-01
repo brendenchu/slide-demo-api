@@ -20,12 +20,10 @@ class ProjectResource extends JsonResource
     public function toArray(Request $request): array
     {
         // Use eager-loaded relationship if available, fallback to accessor
-        $token = $this->whenLoaded('userToken', function () {
-            return $this->userToken->first()?->public_id;
-        }, function () {
+        $token = $this->whenLoaded('userToken', fn () => $this->userToken->first()?->public_id,
             // Fallback to accessor for backward compatibility
-            return $this->user_token();
-        });
+
+            fn () => $this->user_token());
 
         return [
             'id' => $this->public_id,

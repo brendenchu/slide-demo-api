@@ -27,9 +27,7 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'email_verified_at' => $this->email_verified_at,
             'name' => $this->name,
-            'team' => $this->when($this->relationLoaded('teams'), function () {
-                return TeamResource::make($this->currentTeam());
-            }),
+            'team' => $this->when($this->relationLoaded('teams'), fn () => TeamResource::make($this->currentTeam())),
             'roles' => $this->whenLoaded('roles', fn () => $this->getRoleNames()),
             'permissions' => $this->whenLoaded('permissions', fn () => $this->getPermissionsViaRoles()->pluck('name')),
         ];

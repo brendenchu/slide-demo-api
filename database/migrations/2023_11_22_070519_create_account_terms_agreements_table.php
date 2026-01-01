@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('account_terms_agreements', function (Blueprint $table) {
+        Schema::create('account_terms_agreements', function (Blueprint $table): void {
             $table->id();
             $table->morphs('accountable');
             $table->string('terms_version_id')->index();

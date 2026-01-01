@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('read_receipts', function (Blueprint $table) {
+        Schema::create('read_receipts', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('notification_id')->constrained()->onDelete('cascade');
             $table->string('public_id')->unique()->index();

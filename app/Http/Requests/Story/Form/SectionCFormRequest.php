@@ -31,7 +31,7 @@ class SectionCFormRequest extends FormRequest
         return match ($this->page) {
             1 => [
                 'section_c_1' => ['required',
-                    function ($attribute, $value, $fail) {
+                    function ($attribute, $value, $fail): void {
                         // Capital city of France
                         if ($value !== 'Paris') {
                             $fail('Sorry, that is incorrect.');
@@ -41,7 +41,7 @@ class SectionCFormRequest extends FormRequest
             ],
             2 => [
                 'section_c_2' => ['required',
-                    function ($attribute, $value, $fail) {
+                    function ($attribute, $value, $fail): void {
                         // Capital city of Japan
                         if ($value !== 'Tokyo') {
                             $fail('Sorry, that is incorrect.');
@@ -51,7 +51,7 @@ class SectionCFormRequest extends FormRequest
             ],
             3 => [
                 'section_c_3' => ['required',
-                    function ($attribute, $value, $fail) {
+                    function ($attribute, $value, $fail): void {
                         // Capital city of Australia
                         if ($value !== 'Canberra') {
                             $fail('Sorry, that is incorrect.');
@@ -61,7 +61,7 @@ class SectionCFormRequest extends FormRequest
             ],
             4 => [
                 'section_c_4' => ['required',
-                    function ($attribute, $value, $fail) {
+                    function ($attribute, $value, $fail): void {
                         // Capital city of Canada
                         if ($value !== 'Ottawa') {
                             $fail('Sorry, that is incorrect.');
@@ -71,7 +71,7 @@ class SectionCFormRequest extends FormRequest
             ],
             5 => [
                 'section_c_5' => ['required',
-                    function ($attribute, $value, $fail) {
+                    function ($attribute, $value, $fail): void {
                         // Capital city of India
                         if ($value !== 'New Delhi') {
                             $fail('Sorry, that is incorrect.');
@@ -81,7 +81,7 @@ class SectionCFormRequest extends FormRequest
             ],
             6 => [
                 'section_c_6' => ['required',
-                    function ($attribute, $value, $fail) {
+                    function ($attribute, $value, $fail): void {
                         // Capital city of Brazil
                         if ($value !== 'Brasilia') {
                             $fail('Sorry, that is incorrect.');
@@ -91,7 +91,7 @@ class SectionCFormRequest extends FormRequest
             ],
             7 => [
                 'section_c_7' => ['required',
-                    function ($attribute, $value, $fail) {
+                    function ($attribute, $value, $fail): void {
                         // Capital city of Denmark
                         if ($value !== 'Copenhagen') {
                             $fail('Sorry, that is incorrect.');
@@ -101,7 +101,7 @@ class SectionCFormRequest extends FormRequest
             ],
             8 => [
                 'section_c_8' => ['required',
-                    function ($attribute, $value, $fail) {
+                    function ($attribute, $value, $fail): void {
                         // Capital city of Kenya
                         if ($value !== 'Nairobi') {
                             $fail('Sorry, that is incorrect.');
@@ -111,7 +111,7 @@ class SectionCFormRequest extends FormRequest
             ],
             9 => [
                 'section_c_9' => ['required',
-                    function ($attribute, $value, $fail) {
+                    function ($attribute, $value, $fail): void {
                         // Not a Capital city of South Africa
                         if ($value !== 'Johannesburg') {
                             $fail('Sorry, that is incorrect.');

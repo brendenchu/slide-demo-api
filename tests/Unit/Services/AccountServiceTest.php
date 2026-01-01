@@ -8,11 +8,11 @@ use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->service = new AccountService;
 });
 
-it('gets user by email', function () {
+it('gets user by email', function (): void {
     $user = User::factory()->create(['email' => 'test@example.com']);
 
     $result = $this->service->getUserByEmail('test@example.com');
@@ -21,7 +21,7 @@ it('gets user by email', function () {
         ->and($result->id)->toBe($user->id);
 });
 
-it('gets user by slug when profile exists', function () {
+it('gets user by slug when profile exists', function (): void {
     $user = User::factory()->create();
     $profile = Profile::factory()->create(['user_id' => $user->id]);
 
@@ -31,18 +31,18 @@ it('gets user by slug when profile exists', function () {
         ->and($result->id)->toBe($user->id);
 });
 
-it('throws exception when profile not found by slug', function () {
+it('throws exception when profile not found by slug', function (): void {
     $this->service->getUserBySlug('non-existent-slug');
 })->throws(Exception::class, 'Profile not found for slug: non-existent-slug');
 
-it('generates a password with correct length', function () {
+it('generates a password with correct length', function (): void {
     $password = $this->service->generatePassword();
 
     expect($password)->toBeString()
-        ->and(strlen($password))->toBe(16);
+        ->and(strlen((string) $password))->toBe(16);
 });
 
-it('sets user by User instance', function () {
+it('sets user by User instance', function (): void {
     $user = User::factory()->create();
 
     $result = $this->service->setUser($user);
@@ -51,7 +51,7 @@ it('sets user by User instance', function () {
         ->and($this->service->getUser()->id)->toBe($user->id);
 });
 
-it('sets user by email string', function () {
+it('sets user by email string', function (): void {
     $user = User::factory()->create(['email' => 'test@example.com']);
 
     $result = $this->service->setUser('test@example.com');
@@ -60,7 +60,7 @@ it('sets user by email string', function () {
         ->and($this->service->getUser()->id)->toBe($user->id);
 });
 
-it('sets user by slug string', function () {
+it('sets user by slug string', function (): void {
     $user = User::factory()->create();
     $profile = Profile::factory()->create(['user_id' => $user->id]);
 
@@ -70,6 +70,6 @@ it('sets user by slug string', function () {
         ->and($this->service->getUser()->id)->toBe($user->id);
 });
 
-it('throws exception when getting user without setting it first', function () {
+it('throws exception when getting user without setting it first', function (): void {
     $this->service->getUser();
 })->throws(Exception::class, 'No user set.');

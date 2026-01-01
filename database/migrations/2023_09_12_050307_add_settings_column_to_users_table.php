@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->after('remember_token', function () use ($table) {
+        Schema::table('users', function (Blueprint $table): void {
+            $table->after('remember_token', function () use ($table): void {
                 $table->json('settings')->nullable();
             });
         });
@@ -23,7 +23,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
+        Schema::table('users', function (Blueprint $table): void {
             $table->dropColumn('settings');
         });
     }

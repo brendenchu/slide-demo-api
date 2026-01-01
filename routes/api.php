@@ -15,9 +15,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:sanctum')->group(function (): void {
 
-    Route::prefix('team')->group(function () {
+    Route::prefix('team')->group(function (): void {
         Route::get('current', GetCurrentTeamController::class)->name('api.get-current-team');
         Route::post('current', SetCurrentTeamController::class)->name('api.set-current-team');
     });

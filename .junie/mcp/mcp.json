@@ -1,0 +1,11 @@
+{
+    "mcpServers": {
+        "laravel-boost": {
+            "command": "/Users/brendenchu/Library/Application Support/Herd/bin/php84",
+            "args": [
+                "/Users/brendenchu/Code/Projects/PHP/demos/vue-slide-demo/artisan",
+                "boost:mcp"
+            ]
+        }
+    }
+}

@@ -57,7 +57,7 @@ class StoryDashboardController extends Controller
         // convert null values to zero
         foreach ($responses as $key => $value) {
 
-            if (str_contains($key, '_has_')) {
+            if (str_contains((string) $key, '_has_')) {
                 unset($responses[$key]);
 
                 continue;

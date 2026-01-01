@@ -31,7 +31,7 @@ class SectionBFormRequest extends FormRequest
         return match ($this->page) {
             1 => [
                 'section_b_1' => ['required', 'numeric',
-                    function ($attribute, $value, $fail) {
+                    function ($attribute, $value, $fail): void {
                         // 1 + 1 = 2
                         if (intval($value) !== 2) {
                             $fail('Sorry, that is incorrect.');
@@ -39,7 +39,7 @@ class SectionBFormRequest extends FormRequest
                     },
                 ],
                 'section_b_2' => ['required', 'numeric',
-                    function ($attribute, $value, $fail) {
+                    function ($attribute, $value, $fail): void {
                         // 2 - 6 = -4
                         if (intval($value) !== -4) {
                             $fail('Sorry, that is incorrect.');
@@ -48,7 +48,7 @@ class SectionBFormRequest extends FormRequest
                 ],
                 'section_b_3' => ['required', 'numeric',
                     // 3 * 3 = 9
-                    function ($attribute, $value, $fail) {
+                    function ($attribute, $value, $fail): void {
                         if (intval($value) !== 9) {
                             $fail('Sorry, that is incorrect.');
                         }
@@ -57,7 +57,7 @@ class SectionBFormRequest extends FormRequest
             ],
             2 => [
                 'section_b_4' => ['required', 'numeric',
-                    function ($attribute, $value, $fail) {
+                    function ($attribute, $value, $fail): void {
                         // 12 / 4 = 3
                         if (intval($value) !== 3) {
                             $fail('Sorry, that is incorrect.');
@@ -65,7 +65,7 @@ class SectionBFormRequest extends FormRequest
                     },
                 ],
                 'section_b_5' => ['required', 'numeric',
-                    function ($attribute, $value, $fail) {
+                    function ($attribute, $value, $fail): void {
                         // 3 ^ 3 = 27
                         if (intval($value) !== 27) {
                             $fail('Sorry, that is incorrect.');
@@ -73,7 +73,7 @@ class SectionBFormRequest extends FormRequest
                     },
                 ],
                 'section_b_6' => ['required', 'numeric',
-                    function ($attribute, $value, $fail) {
+                    function ($attribute, $value, $fail): void {
                         // 5! = 120
                         if (intval($value) !== 120) {
                             $fail('Sorry, that is incorrect.');
@@ -83,7 +83,7 @@ class SectionBFormRequest extends FormRequest
             ],
             3 => [
                 'section_b_7' => ['required', 'numeric',
-                    function ($attribute, $value, $fail) {
+                    function ($attribute, $value, $fail): void {
                         // sides of a heptagon
                         if (intval($value) !== 7) {
                             $fail('Sorry, that is incorrect.');
@@ -91,7 +91,7 @@ class SectionBFormRequest extends FormRequest
                     },
                 ],
                 'section_b_8' => ['required', 'numeric',
-                    function ($attribute, $value, $fail) {
+                    function ($attribute, $value, $fail): void {
                         // degrees in a right angle
                         if (intval($value) !== 90) {
                             $fail('Sorry, that is incorrect.');
@@ -99,7 +99,7 @@ class SectionBFormRequest extends FormRequest
                     },
                 ],
                 'section_b_9' => ['required', 'numeric',
-                    function ($attribute, $value, $fail) {
+                    function ($attribute, $value, $fail): void {
                         // days in a leap year
                         if (intval($value) !== 366) {
                             $fail('Sorry, that is incorrect.');

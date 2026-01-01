@@ -11,11 +11,11 @@ use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     Log::spy();
 });
 
-it('sets project by instance', function () {
+it('sets project by instance', function (): void {
     $project = Project::factory()->create();
     $service = new ProjectService;
 
@@ -26,7 +26,7 @@ it('sets project by instance', function () {
         ->and($service->getProject()->id)->toBe($project->id);
 });
 
-it('sets project by public_id string', function () {
+it('sets project by public_id string', function (): void {
     $project = Project::factory()->create();
     $service = new ProjectService;
 
@@ -36,7 +36,7 @@ it('sets project by public_id string', function () {
         ->and($service->getProject()->id)->toBe($project->id);
 });
 
-it('gets project when set', function () {
+it('gets project when set', function (): void {
     $project = Project::factory()->create();
     $service = new ProjectService;
     $service->setProject($project);
@@ -47,13 +47,13 @@ it('gets project when set', function () {
         ->and($result->id)->toBe($project->id);
 });
 
-it('throws exception when getting project without setting it', function () {
+it('throws exception when getting project without setting it', function (): void {
     $service = new ProjectService;
 
-    expect(fn () => $service->getProject())->toThrow(Exception::class, 'No project set.');
+    expect(fn (): Project => $service->getProject())->toThrow(Exception::class, 'No project set.');
 });
 
-it('sets steps with ProjectStep enum', function () {
+it('sets steps with ProjectStep enum', function (): void {
     $service = new ProjectService;
 
     $result = $service->setSteps(ProjectStep::STEP_ZERO);
@@ -61,7 +61,7 @@ it('sets steps with ProjectStep enum', function () {
     expect($result)->toBeInstanceOf(ProjectService::class);
 });
 
-it('sets steps with string value', function () {
+it('sets steps with string value', function (): void {
     $service = new ProjectService;
 
     $result = $service->setSteps('intro');
@@ -69,7 +69,7 @@ it('sets steps with string value', function () {
     expect($result)->toBeInstanceOf(ProjectService::class);
 });
 
-it('sets multiple steps with variadic arguments', function () {
+it('sets multiple steps with variadic arguments', function (): void {
     $service = new ProjectService;
 
     $result = $service->setSteps(ProjectStep::STEP_ZERO, 'section-a', ProjectStep::STEP_TWO);
@@ -77,7 +77,7 @@ it('sets multiple steps with variadic arguments', function () {
     expect($result)->toBeInstanceOf(ProjectService::class);
 });
 
-it('creates project with validated data', function () {
+it('creates project with validated data', function (): void {
     $team = Team::factory()->create();
     $service = new ProjectService;
 
@@ -94,10 +94,10 @@ it('creates project with validated data', function () {
         ->and($project->key)->toContain('test-project')
         ->and($project->teams->first()->id)->toBe($team->id);
 
-    Log::shouldHaveReceived('info')->with('Project created successfully', \Mockery::on(fn ($arg) => isset($arg['project_id']) && isset($arg['team_id'])));
+    Log::shouldHaveReceived('info')->with('Project created successfully', \Mockery::on(fn ($arg): bool => isset($arg['project_id']) && isset($arg['team_id'])));
 });
 
-it('creates project without validated data using auto-generated values', function () {
+it('creates project without validated data using auto-generated values', function (): void {
     $team = Team::factory()->create();
     $service = new ProjectService;
 
@@ -108,7 +108,7 @@ it('creates project without validated data using auto-generated values', functio
         ->and($project->description)->toContain($team->label);
 });
 
-it('saves responses and creates new records', function () {
+it('saves responses and creates new records', function (): void {
     $team = Team::factory()->create();
     $project = Project::factory()->create();
     $project->teams()->attach($team);
@@ -128,10 +128,10 @@ it('saves responses and creates new records', function () {
         ->and($project->responses->where('key', 'intro_1')->first()->value)->toBe('Value 1')
         ->and($project->responses->where('key', 'intro_2')->first()->value)->toBe('Value 2');
 
-    Log::shouldHaveReceived('info')->with('Project responses saved', \Mockery::on(fn ($arg) => $arg['response_count'] === 3));
+    Log::shouldHaveReceived('info')->with('Project responses saved', \Mockery::on(fn ($arg): bool => $arg['response_count'] === 3));
 });
 
-it('saves responses and updates existing records', function () {
+it('saves responses and updates existing records', function (): void {
     $team = Team::factory()->create();
     $project = Project::factory()->create();
     $project->teams()->attach($team);
@@ -153,14 +153,14 @@ it('saves responses and updates existing records', function () {
         ->and($project->fresh()->responses->where('key', 'intro_1')->first()->value)->toBe('New Value');
 });
 
-it('throws exception when saving responses without project', function () {
+it('throws exception when saving responses without project', function (): void {
     $service = new ProjectService;
     $service->setSteps(ProjectStep::STEP_ZERO);
 
     expect(fn () => $service->saveResponses(['intro_1' => 'value']))->toThrow(Exception::class, 'No project set.');
 });
 
-it('gets responses as flat array', function () {
+it('gets responses as flat array', function (): void {
     $team = Team::factory()->create();
     $project = Project::factory()->create();
     $project->teams()->attach($team);
@@ -181,7 +181,7 @@ it('gets responses as flat array', function () {
         ->and($result['intro_3'])->toBe(45.67); // cast to float
 });
 
-it('gets responses as grouped array', function () {
+it('gets responses as grouped array', function (): void {
     $team = Team::factory()->create();
     $project = Project::factory()->create();
     $project->teams()->attach($team);
@@ -200,7 +200,7 @@ it('gets responses as grouped array', function () {
         ->and($result['section-a']['section_a_1'])->toBe('Value A1');
 });
 
-it('publishes project successfully', function () {
+it('publishes project successfully', function (): void {
     $team = Team::factory()->create();
     $project = Project::factory()->create(['status' => ProjectStatus::DRAFT]);
     $project->teams()->attach($team);
@@ -212,16 +212,16 @@ it('publishes project successfully', function () {
     expect($result)->toBeTrue()
         ->and($project->fresh()->status)->toBe(ProjectStatus::PUBLISHED);
 
-    Log::shouldHaveReceived('info')->with('Project published successfully', \Mockery::on(fn ($arg) => isset($arg['project_id'])));
+    Log::shouldHaveReceived('info')->with('Project published successfully', \Mockery::on(fn ($arg): bool => isset($arg['project_id'])));
 });
 
-it('throws exception when publishing without project', function () {
+it('throws exception when publishing without project', function (): void {
     $service = new ProjectService;
 
-    expect(fn () => $service->publishProject())->toThrow(Exception::class, 'No project set.');
+    expect(fn (): bool => $service->publishProject())->toThrow(Exception::class, 'No project set.');
 });
 
-it('checks if project is complete when published', function () {
+it('checks if project is complete when published', function (): void {
     $team = Team::factory()->create();
     $project = Project::factory()->create();
     $project->teams()->attach($team);
@@ -234,7 +234,7 @@ it('checks if project is complete when published', function () {
     expect($service->isProjectComplete())->toBeTrue();
 });
 
-it('checks if project is not complete when not published', function () {
+it('checks if project is not complete when not published', function (): void {
     $team = Team::factory()->create();
     $project = Project::factory()->create(['status' => ProjectStatus::DRAFT]);
     $project->teams()->attach($team);
@@ -245,13 +245,13 @@ it('checks if project is not complete when not published', function () {
     expect($service->isProjectComplete())->toBeFalse();
 });
 
-it('throws exception when checking completion without project', function () {
+it('throws exception when checking completion without project', function (): void {
     $service = new ProjectService;
 
-    expect(fn () => $service->isProjectComplete())->toThrow(Exception::class, 'No project set.');
+    expect(fn (): bool => $service->isProjectComplete())->toThrow(Exception::class, 'No project set.');
 });
 
-it('gets all projects for a team', function () {
+it('gets all projects for a team', function (): void {
     $team = Team::factory()->create();
     $projects = Project::factory()->count(3)->create();
     foreach ($projects as $project) {

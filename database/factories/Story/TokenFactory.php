@@ -3,11 +3,12 @@
 namespace Database\Factories\Story;
 
 use App\Models\Story\Project;
+use App\Models\Story\Token;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Story\Token>
+ * @extends Factory<Token>
  */
 class TokenFactory extends Factory
 {
@@ -32,7 +33,7 @@ class TokenFactory extends Factory
      */
     public function expired(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn (array $attributes): array => [
             'expires_at' => now()->subDay(),
         ]);
     }
@@ -42,7 +43,7 @@ class TokenFactory extends Factory
      */
     public function revoked(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn (array $attributes): array => [
             'revoked_at' => now(),
         ]);
     }

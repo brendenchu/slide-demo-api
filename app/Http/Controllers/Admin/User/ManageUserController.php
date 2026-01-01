@@ -80,7 +80,7 @@ class ManageUserController extends BaseUserController
     /**
      * @throws Exception
      */
-    public function edit(Profile $profile)
+    public function edit(Profile $profile): never
     {
         dd('edit user');
     }

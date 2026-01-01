@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['verified', 'profile', 'team'])
     ->prefix('dashboard')
-    ->group(function () {
+    ->group(function (): void {
         // Dashboard
         Route::get('{project}', StoryDashboardController::class)->name('story.dashboard');
 
@@ -20,10 +20,10 @@ Route::middleware(['verified', 'profile', 'team'])
 
 Route::middleware(['verified', 'terms', 'profile', 'team'])
     ->prefix('form')
-    ->group(function () {
+    ->group(function (): void {
         // New
         Route::prefix('new')
-            ->group(function () {
+            ->group(function (): void {
                 Route::get('/', [NewStoryController::class, 'create'])->name('story.create');
                 Route::post('/', [NewStoryController::class, 'store'])->name('story.store');
             });
@@ -32,7 +32,7 @@ Route::middleware(['verified', 'terms', 'profile', 'team'])
         Route::post('publish', PublishStoryController::class)->name('story.publish');
 
         Route::prefix('{project}')
-            ->group(function () {
+            ->group(function (): void {
                 // Continue
                 Route::get('continue', ContinueStoryController::class)->name('story.continue');
                 // Complete

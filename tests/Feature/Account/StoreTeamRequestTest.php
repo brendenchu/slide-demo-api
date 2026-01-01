@@ -1,43 +1,44 @@
 <?php
 
+use App\Http\Requests\Account\StoreTeamRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
 
-it('blocks unauthenticated requests in FormRequest', function () {
+it('blocks unauthenticated requests in FormRequest', function (): void {
     // Testing the FormRequest authorization directly since route may not exist
-    $request = new \App\Http\Requests\Account\StoreTeamRequest;
-    $request->setUserResolver(fn () => null);
+    $request = new StoreTeamRequest;
+    $request->setUserResolver(fn (): null => null);
 
     expect($request->authorize())->toBeFalse();
 });
 
-it('allows authenticated users to access team creation', function () {
+it('allows authenticated users to access team creation', function (): void {
     $user = User::factory()->create();
 
     // Note: This test verifies authorization passes
     // Actual route may not exist - testing the FormRequest authorization only
     $this->actingAs($user);
 
-    $request = new \App\Http\Requests\Account\StoreTeamRequest;
+    $request = new StoreTeamRequest;
     $request->setUserResolver(fn () => $user);
 
     expect($request->authorize())->toBeTrue();
 });
 
-it('blocks unauthenticated users from team creation', function () {
-    $request = new \App\Http\Requests\Account\StoreTeamRequest;
-    $request->setUserResolver(fn () => null);
+it('blocks unauthenticated users from team creation', function (): void {
+    $request = new StoreTeamRequest;
+    $request->setUserResolver(fn (): null => null);
 
     expect($request->authorize())->toBeFalse();
 });
 
-it('requires team name in validation rules', function () {
+it('requires team name in validation rules', function (): void {
     $user = User::factory()->create();
 
-    $request = new \App\Http\Requests\Account\StoreTeamRequest;
+    $request = new StoreTeamRequest;
     $rules = $request->rules();
 
     expect($rules)->toHaveKey('name')
@@ -46,8 +47,8 @@ it('requires team name in validation rules', function () {
         ->and($rules['name'])->toContain('max:255');
 });
 
-it('allows optional team key in validation rules', function () {
-    $request = new \App\Http\Requests\Account\StoreTeamRequest;
+it('allows optional team key in validation rules', function (): void {
+    $request = new StoreTeamRequest;
     $rules = $request->rules();
 
     expect($rules)->toHaveKey('key')

@@ -207,10 +207,10 @@ class TokenService
 
         return $this->setupQuery()
             ->where('user_id', $user->id)
-            ->when($project, function (Builder $query) use ($project) {
+            ->when($project, function (Builder $query) use ($project): void {
                 $query->where('project_id', $project->id);
             })
-            ->whereHas('project', function (Builder $query) use ($status) {
+            ->whereHas('project', function (Builder $query) use ($status): void {
                 $query->where('status', $status->value);
             })
             ->latest()

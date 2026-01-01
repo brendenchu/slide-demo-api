@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users_teams', function (Blueprint $table) {
+        Schema::create('users_teams', function (Blueprint $table): void {
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('team_id')->constrained()->onDelete('cascade');
             $table->boolean('is_admin')->default(false);

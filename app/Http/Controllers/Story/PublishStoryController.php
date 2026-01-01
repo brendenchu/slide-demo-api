@@ -3,13 +3,11 @@
 namespace App\Http\Controllers\Story;
 
 use App\Http\Controllers\Controller;
-use App\Mail\StoryPublished;
 use App\Services\ProjectService;
 use App\Services\TokenService;
 use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
 
 class PublishStoryController extends Controller
 {

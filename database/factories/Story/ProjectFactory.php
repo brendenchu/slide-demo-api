@@ -4,10 +4,11 @@ namespace Database\Factories\Story;
 
 use App\Enums\Story\ProjectStatus;
 use App\Models\Account\Team;
+use App\Models\Story\Project;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Story\Project>
+ * @extends Factory<Project>
  */
 class ProjectFactory extends Factory
 {
@@ -33,7 +34,7 @@ class ProjectFactory extends Factory
      */
     public function configure(): static
     {
-        return $this->afterCreating(function ($project) {
+        return $this->afterCreating(function ($project): void {
             if ($project->teams()->count() === 0) {
                 $team = Team::factory()->create();
                 $project->teams()->attach($team);

@@ -66,7 +66,7 @@ class ContinueStoryController extends Controller
         // Validate and get step from last position
         try {
             $step = ProjectStep::from($lastPosition['step']);
-        } catch (\ValueError $e) {
+        } catch (\ValueError) {
             // Invalid step in last position, default to intro
             $step = ProjectStep::Intro;
             $lastPosition = ['step' => 'intro', 'page' => 1];
