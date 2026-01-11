@@ -4,9 +4,11 @@ namespace App\Models\Story;
 
 use App\Enums\Story\ProjectStatus;
 use App\Models\Account\Team;
+use App\Models\User;
 use App\Traits\HasPublicId;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -24,11 +26,13 @@ class Project extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'user_id',
         'key',
         'label',
         'description',
-        'step',
-        'value',
+        'status',
+        'current_step',
+        'responses',
     ];
 
     /**
@@ -58,6 +62,7 @@ class Project extends Model
     {
         return [
             'status' => ProjectStatus::class,
+            'responses' => 'array',
         ];
     }
 
@@ -67,7 +72,7 @@ class Project extends Model
     protected static function booted(): void
     {
         static::creating(function ($model): void {
-            $model->status = ProjectStatus::DRAFT;
+            $model->status = ProjectStatus::Draft;
         });
     }
 
@@ -77,6 +82,14 @@ class Project extends Model
     public function getSlugAttribute(): string
     {
         return $this->key;
+    }
+
+    /**
+     * Get the user that owns the project.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     /**

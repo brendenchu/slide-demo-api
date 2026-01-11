@@ -108,7 +108,8 @@ class TokenService
     /**
      * Save the user's last position in the form flow.
      *
-     * Stores position in both session and token settings for persistence.
+     * Stores position in token settings for persistence.
+     * (Session storage removed for API-only mode)
      *
      * @param  string  $step  The step identifier
      * @param  int|null  $page  The page number within the step
@@ -120,12 +121,6 @@ class TokenService
         if (empty($this->token)) {
             throw new Exception('No token set.');
         }
-
-        // write last position to session
-        session()->put('last_position', [
-            'step' => $step,
-            'page' => $page,
-        ]);
 
         // write last position to token settings
         $this->token->setSetting('last_position', [

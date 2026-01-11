@@ -56,7 +56,7 @@ it('throws exception when getting project without setting it', function (): void
 it('sets steps with ProjectStep enum', function (): void {
     $service = new ProjectService;
 
-    $result = $service->setSteps(ProjectStep::STEP_ZERO);
+    $result = $service->setSteps(ProjectStep::Intro);
 
     expect($result)->toBeInstanceOf(ProjectService::class);
 });
@@ -72,12 +72,15 @@ it('sets steps with string value', function (): void {
 it('sets multiple steps with variadic arguments', function (): void {
     $service = new ProjectService;
 
-    $result = $service->setSteps(ProjectStep::STEP_ZERO, 'section-a', ProjectStep::STEP_TWO);
+    $result = $service->setSteps(ProjectStep::Intro, 'section-a', ProjectStep::SectionB);
 
     expect($result)->toBeInstanceOf(ProjectService::class);
 });
 
 it('creates project with validated data', function (): void {
+    $user = \App\Models\User::factory()->create();
+    $this->actingAs($user);
+
     $team = Team::factory()->create();
     $service = new ProjectService;
 
@@ -98,6 +101,9 @@ it('creates project with validated data', function (): void {
 });
 
 it('creates project without validated data using auto-generated values', function (): void {
+    $user = \App\Models\User::factory()->create();
+    $this->actingAs($user);
+
     $team = Team::factory()->create();
     $service = new ProjectService;
 
@@ -109,12 +115,15 @@ it('creates project without validated data using auto-generated values', functio
 });
 
 it('saves responses and creates new records', function (): void {
+    $user = \App\Models\User::factory()->create();
+    $this->actingAs($user);
+
     $team = Team::factory()->create();
-    $project = Project::factory()->create();
+    $project = Project::factory()->create(['user_id' => $user->id]);
     $project->teams()->attach($team);
     $service = new ProjectService;
 
-    $service->setProject($project)->setSteps(ProjectStep::STEP_ZERO);
+    $service->setProject($project)->setSteps(ProjectStep::Intro);
 
     $responses = [
         'intro_1' => 'Value 1',
@@ -124,24 +133,27 @@ it('saves responses and creates new records', function (): void {
 
     $service->saveResponses($responses);
 
-    expect($project->responses)->toHaveCount(3)
-        ->and($project->responses->where('key', 'intro_1')->first()->value)->toBe('Value 1')
-        ->and($project->responses->where('key', 'intro_2')->first()->value)->toBe('Value 2');
+    expect($project->responses()->get())->toHaveCount(3)
+        ->and($project->responses()->where('key', 'intro_1')->first()->value)->toBe('Value 1')
+        ->and($project->responses()->where('key', 'intro_2')->first()->value)->toBe('Value 2');
 
     Log::shouldHaveReceived('info')->with('Project responses saved', \Mockery::on(fn ($arg): bool => $arg['response_count'] === 3));
 });
 
 it('saves responses and updates existing records', function (): void {
+    $user = \App\Models\User::factory()->create();
+    $this->actingAs($user);
+
     $team = Team::factory()->create();
-    $project = Project::factory()->create();
+    $project = Project::factory()->create(['user_id' => $user->id]);
     $project->teams()->attach($team);
     $service = new ProjectService;
 
-    $service->setProject($project)->setSteps(ProjectStep::STEP_ZERO);
+    $service->setProject($project)->setSteps(ProjectStep::Intro);
 
     // Create initial responses
     $project->responses()->create([
-        'step' => ProjectStep::STEP_ZERO->value,
+        'step' => ProjectStep::Intro->value,
         'key' => 'intro_1',
         'value' => 'Old Value',
     ]);
@@ -150,12 +162,12 @@ it('saves responses and updates existing records', function (): void {
     $service->saveResponses(['intro_1' => 'New Value']);
 
     expect($project->responses()->where('key', 'intro_1')->count())->toBe(1)
-        ->and($project->fresh()->responses->where('key', 'intro_1')->first()->value)->toBe('New Value');
+        ->and($project->fresh()->responses()->where('key', 'intro_1')->first()->value)->toBe('New Value');
 });
 
 it('throws exception when saving responses without project', function (): void {
     $service = new ProjectService;
-    $service->setSteps(ProjectStep::STEP_ZERO);
+    $service->setSteps(ProjectStep::Intro);
 
     expect(fn () => $service->saveResponses(['intro_1' => 'value']))->toThrow(Exception::class, 'No project set.');
 });
@@ -171,7 +183,7 @@ it('gets responses as flat array', function (): void {
     ]);
 
     $service = new ProjectService;
-    $service->setProject($project)->setSteps(ProjectStep::STEP_ZERO);
+    $service->setProject($project)->setSteps(ProjectStep::Intro);
 
     $result = $service->getResponsesArray(false);
 
@@ -191,7 +203,7 @@ it('gets responses as grouped array', function (): void {
     ]);
 
     $service = new ProjectService;
-    $service->setProject($project)->setSteps(ProjectStep::STEP_ZERO, ProjectStep::STEP_ONE);
+    $service->setProject($project)->setSteps(ProjectStep::Intro, ProjectStep::SectionA);
 
     $result = $service->getResponsesArray(true);
 
@@ -202,7 +214,7 @@ it('gets responses as grouped array', function (): void {
 
 it('publishes project successfully', function (): void {
     $team = Team::factory()->create();
-    $project = Project::factory()->create(['status' => ProjectStatus::DRAFT]);
+    $project = Project::factory()->create(['status' => ProjectStatus::Draft]);
     $project->teams()->attach($team);
     $service = new ProjectService;
 
@@ -210,7 +222,7 @@ it('publishes project successfully', function (): void {
     $result = $service->publishProject();
 
     expect($result)->toBeTrue()
-        ->and($project->fresh()->status)->toBe(ProjectStatus::PUBLISHED);
+        ->and($project->fresh()->status)->toBe(ProjectStatus::Published);
 
     Log::shouldHaveReceived('info')->with('Project published successfully', \Mockery::on(fn ($arg): bool => isset($arg['project_id'])));
 });
@@ -225,7 +237,7 @@ it('checks if project is complete when published', function (): void {
     $team = Team::factory()->create();
     $project = Project::factory()->create();
     $project->teams()->attach($team);
-    $project->status = ProjectStatus::PUBLISHED;
+    $project->status = ProjectStatus::Published;
     $project->save();
     $service = new ProjectService;
 
@@ -236,7 +248,7 @@ it('checks if project is complete when published', function (): void {
 
 it('checks if project is not complete when not published', function (): void {
     $team = Team::factory()->create();
-    $project = Project::factory()->create(['status' => ProjectStatus::DRAFT]);
+    $project = Project::factory()->create(['status' => ProjectStatus::Draft]);
     $project->teams()->attach($team);
     $service = new ProjectService;
 

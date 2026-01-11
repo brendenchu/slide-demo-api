@@ -125,21 +125,17 @@ it('creates token using authenticated user when user is null', function (): void
     expect($token->user_id)->toBe($user->id);
 });
 
-it('saves last position to session and token settings', function (): void {
+it('saves last position to token settings', function (): void {
     $token = Token::factory()->create();
     $service = new TokenService;
     $service->setToken($token);
 
     $service->saveLastPosition('intro', 2);
 
-    expect(session('last_position'))->toBe([
+    expect($token->fresh()->setting('last_position'))->toBe([
         'step' => 'intro',
         'page' => 2,
-    ])
-        ->and($token->fresh()->setting('last_position'))->toBe([
-            'step' => 'intro',
-            'page' => 2,
-        ]);
+    ]);
 });
 
 it('throws exception when saving position without token', function (): void {
@@ -182,7 +178,7 @@ it('gets revoked tokens when bypass is enabled', function (): void {
 it('gets token by project status', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->status = ProjectStatus::PUBLISHED;
+    $project->status = ProjectStatus::Published;
     $project->save();
 
     $token = Token::factory()->create([
@@ -191,7 +187,7 @@ it('gets token by project status', function (): void {
     ]);
 
     $service = new TokenService;
-    $result = $service->getTokenByProjectStatus(ProjectStatus::PUBLISHED, $project, $user);
+    $result = $service->getTokenByProjectStatus(ProjectStatus::Published, $project, $user);
 
     expect($result)->toBeInstanceOf(Token::class)
         ->and($result->id)->toBe($token->id);
@@ -200,11 +196,11 @@ it('gets token by project status', function (): void {
 it('gets latest token by project status', function (): void {
     $user = User::factory()->create();
     $project1 = Project::factory()->create();
-    $project1->status = ProjectStatus::PUBLISHED;
+    $project1->status = ProjectStatus::Published;
     $project1->save();
 
     $project2 = Project::factory()->create();
-    $project2->status = ProjectStatus::PUBLISHED;
+    $project2->status = ProjectStatus::Published;
     $project2->save();
 
     $olderToken = Token::factory()->create([
@@ -220,11 +216,11 @@ it('gets latest token by project status', function (): void {
     ]);
 
     $service = new TokenService;
-    $result = $service->getTokenByProjectStatus(ProjectStatus::PUBLISHED, null, $user);
+    $result = $service->getTokenByProjectStatus(ProjectStatus::Published, null, $user);
 
     expect($result)->toBeInstanceOf(Token::class)
         ->and($result->id)->toBe($newerToken->id)
-        ->and($result->project->status)->toBe(ProjectStatus::PUBLISHED);
+        ->and($result->project->status)->toBe(ProjectStatus::Published);
 });
 
 it('checks if token is expired', function (): void {

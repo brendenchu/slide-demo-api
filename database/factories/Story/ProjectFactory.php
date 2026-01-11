@@ -22,10 +22,13 @@ class ProjectFactory extends Factory
         $name = fake()->words(3, true);
 
         return [
+            'user_id' => \App\Models\User::factory(),
             'key' => fake()->slug(3),
             'label' => ucfirst($name),
             'description' => fake()->sentence(),
-            'status' => ProjectStatus::DRAFT,
+            'status' => ProjectStatus::Draft,
+            'current_step' => 'intro',
+            'responses' => [],
         ];
     }
 

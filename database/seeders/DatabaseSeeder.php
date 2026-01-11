@@ -169,20 +169,23 @@ class DatabaseSeeder extends Seeder
 
         // Create Users with different roles
         $admin = User::factory()->create([
-            'name' => 'Admin User',
-            'email' => 'admin@example.com',
+            'name' => config('demo.admin_name'),
+            'email' => config('demo.admin_email'),
+            'password' => bcrypt(config('demo.admin_password')),
         ]);
         $admin->assignRole(RoleEnum::Admin->value);
 
         $consultant = User::factory()->create([
-            'name' => 'Consultant User',
-            'email' => 'consultant@example.com',
+            'name' => config('demo.consultant_name'),
+            'email' => config('demo.consultant_email'),
+            'password' => bcrypt(config('demo.consultant_password')),
         ]);
         $consultant->assignRole(RoleEnum::Consultant->value);
 
         $client1 = User::factory()->create([
-            'name' => 'Client One',
-            'email' => 'client1@example.com',
+            'name' => config('demo.client_name'),
+            'email' => config('demo.client_email'),
+            'password' => bcrypt(config('demo.client_password')),
         ]);
         $client1->assignRole(RoleEnum::Client->value);
 
@@ -274,7 +277,7 @@ class DatabaseSeeder extends Seeder
             'label' => 'My Draft Project',
             'description' => 'This is a work in progress project',
         ]);
-        $draftProject->status = ProjectStatus::DRAFT;
+        $draftProject->status = ProjectStatus::Draft;
         $draftProject->save();
         $draftProject->teams()->attach($client1->teams()->first());
 
@@ -284,7 +287,7 @@ class DatabaseSeeder extends Seeder
             'project_id' => $draftProject->id,
             'settings' => [
                 'last_position' => [
-                    'step' => ProjectStep::STEP_ZERO->value,
+                    'step' => ProjectStep::Intro->value,
                     'page' => 1,
                 ],
             ],
@@ -295,7 +298,7 @@ class DatabaseSeeder extends Seeder
             'label' => 'Completed Project Alpha',
             'description' => 'A fully completed and published project',
         ]);
-        $publishedProject1->status = ProjectStatus::PUBLISHED;
+        $publishedProject1->status = ProjectStatus::Published;
         $publishedProject1->save();
         $publishedProject1->teams()->attach($client1->teams()->first());
 
@@ -307,7 +310,7 @@ class DatabaseSeeder extends Seeder
             'label' => 'Team Collaboration Project',
             'description' => 'A project worked on by multiple team members',
         ]);
-        $collaborationProject->status = ProjectStatus::PUBLISHED;
+        $collaborationProject->status = ProjectStatus::Published;
         $collaborationProject->save();
         $collaborationProject->teams()->attach($collaborationTeam);
 
@@ -319,7 +322,7 @@ class DatabaseSeeder extends Seeder
             'label' => 'Older Published Project',
             'description' => 'Published project with expired token',
         ]);
-        $expiredTokenProject->status = ProjectStatus::PUBLISHED;
+        $expiredTokenProject->status = ProjectStatus::Published;
         $expiredTokenProject->save();
         $expiredTokenProject->teams()->attach($client2->teams()->first());
 
@@ -331,7 +334,7 @@ class DatabaseSeeder extends Seeder
             'label' => 'Archived Historical Project',
             'description' => 'An old project that has been archived',
         ]);
-        $archivedProject->status = ProjectStatus::ARCHIVED;
+        $archivedProject->status = ProjectStatus::Archived;
         $archivedProject->save();
         $archivedProject->teams()->attach($client3->teams()->first());
 
@@ -344,7 +347,7 @@ class DatabaseSeeder extends Seeder
                 'label' => "Draft Project {$i}",
                 'description' => 'Another draft project in various stages',
             ]);
-            $draft->status = ProjectStatus::DRAFT;
+            $draft->status = ProjectStatus::Draft;
             $draft->save();
             $draft->teams()->attach($client3->teams()->first());
 

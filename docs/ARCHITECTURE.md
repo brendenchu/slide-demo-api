@@ -1,6 +1,6 @@
 # Architecture Documentation
 
-**Project:** Vue Slide Demo - Laravel 12 Application
+**Project:** Slide Demo API - Laravel 12 REST API
 **Last Updated:** December 31, 2025
 **Laravel Version:** 12
 **PHP Version:** 8.4+
@@ -680,7 +680,7 @@ import { saveForm } from '@/utils/story/form'
 
 ### Slide System
 
-The core feature is a reusable multi-step slide form system built with Vue 3 Composition API.
+The core feature is a reusable multi-step slide form system built with modern JavaScript framework patterns.
 
 **Key Components:**
 

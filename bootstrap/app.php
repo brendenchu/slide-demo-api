@@ -1,8 +1,5 @@
 <?php
 
-use App\Http\Middleware\Account\EnsureTermsAreAccepted;
-use App\Http\Middleware\Account\UserBelongsToTeam;
-use App\Http\Middleware\Account\UserHasProfile;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -15,22 +12,20 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->web(append: [
-            \App\Http\Middleware\HandleInertiaRequests::class,
-            \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
-        ])->alias([
-            // App-specific middleware
-            'profile' => UserHasProfile::class,
-            'team' => UserBelongsToTeam::class,
-            'terms' => EnsureTermsAreAccepted::class,
-
+        $middleware->alias([
             // Spatie middleware
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
 
-        //
+        // Configure API CORS and Security Headers
+        $middleware->api(prepend: [
+            \Illuminate\Http\Middleware\HandleCors::class,
+        ]);
+
+        // Add security headers to all responses
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

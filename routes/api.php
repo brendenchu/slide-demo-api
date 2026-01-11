@@ -9,14 +9,64 @@ use Illuminate\Support\Facades\Route;
 | API Routes
 |--------------------------------------------------------------------------
 |
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
+| API routes for Vue SPA integration.
+| All routes are prefixed with /api and use Sanctum authentication.
 |
 */
 
-Route::middleware('auth:sanctum')->group(function (): void {
+// API v1 Routes
+Route::prefix('v1')->group(function (): void {
 
+    // Public authentication routes with strict rate limiting (5 attempts per minute)
+    Route::prefix('auth')->middleware('throttle:5,1')->group(function (): void {
+        Route::post('login', \App\Http\Controllers\API\Auth\LoginController::class)->name('api.v1.auth.login');
+        Route::post('register', \App\Http\Controllers\API\Auth\RegisterController::class)->name('api.v1.auth.register');
+    });
+
+    // Protected routes (require authentication) with standard rate limiting (60 per minute)
+    Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function (): void {
+
+        // Auth user profile routes
+        Route::prefix('auth')->group(function (): void {
+            Route::post('logout', \App\Http\Controllers\API\Auth\LogoutController::class)->name('api.v1.auth.logout');
+            Route::get('user', [\App\Http\Controllers\API\Auth\UserController::class, 'show'])->name('api.v1.auth.user');
+            Route::put('user', [\App\Http\Controllers\API\Auth\UserController::class, 'update'])->name('api.v1.auth.update');
+        });
+
+        // Projects routes
+        Route::prefix('projects')->group(function (): void {
+            Route::get('/', [\App\Http\Controllers\API\Story\ProjectController::class, 'index'])->name('api.v1.projects.index');
+            Route::post('/', [\App\Http\Controllers\API\Story\ProjectController::class, 'store'])->name('api.v1.projects.store');
+            Route::get('/{id}', [\App\Http\Controllers\API\Story\ProjectController::class, 'show'])->name('api.v1.projects.show');
+            Route::put('/{id}', [\App\Http\Controllers\API\Story\ProjectController::class, 'update'])->name('api.v1.projects.update');
+            Route::delete('/{id}', [\App\Http\Controllers\API\Story\ProjectController::class, 'destroy'])->name('api.v1.projects.destroy');
+            Route::post('/{id}/responses', \App\Http\Controllers\API\Story\SaveResponseController::class)->name('api.v1.projects.save-responses');
+            Route::post('/{id}/complete', \App\Http\Controllers\API\Story\CompleteProjectController::class)->name('api.v1.projects.complete');
+        });
+
+        // Admin routes (require permission)
+        Route::prefix('admin')->group(function (): void {
+            Route::prefix('users')->group(function (): void {
+                Route::get('/', [\App\Http\Controllers\API\Admin\UserController::class, 'index'])->name('api.v1.admin.users.index');
+                Route::post('/', [\App\Http\Controllers\API\Admin\UserController::class, 'store'])->name('api.v1.admin.users.store');
+                Route::get('/{id}', [\App\Http\Controllers\API\Admin\UserController::class, 'show'])->name('api.v1.admin.users.show');
+                Route::put('/{id}', [\App\Http\Controllers\API\Admin\UserController::class, 'update'])->name('api.v1.admin.users.update');
+                Route::delete('/{id}', [\App\Http\Controllers\API\Admin\UserController::class, 'destroy'])->name('api.v1.admin.users.destroy');
+            });
+        });
+
+        // Teams routes
+        Route::prefix('teams')->group(function (): void {
+            Route::get('/', [\App\Http\Controllers\API\Team\TeamController::class, 'index'])->name('api.v1.teams.index');
+            Route::post('/', [\App\Http\Controllers\API\Team\TeamController::class, 'store'])->name('api.v1.teams.store');
+            Route::get('/{id}', [\App\Http\Controllers\API\Team\TeamController::class, 'show'])->name('api.v1.teams.show');
+            Route::put('/{id}', [\App\Http\Controllers\API\Team\TeamController::class, 'update'])->name('api.v1.teams.update');
+        });
+    });
+});
+
+// Legacy team routes (existing)
+Route::middleware('auth:sanctum')->group(function (): void {
     Route::prefix('team')->group(function (): void {
         Route::get('current', GetCurrentTeamController::class)->name('api.get-current-team');
         Route::post('current', SetCurrentTeamController::class)->name('api.set-current-team');
