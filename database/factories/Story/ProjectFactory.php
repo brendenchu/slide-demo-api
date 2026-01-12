@@ -5,6 +5,7 @@ namespace Database\Factories\Story;
 use App\Enums\Story\ProjectStatus;
 use App\Models\Account\Team;
 use App\Models\Story\Project;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -22,7 +23,7 @@ class ProjectFactory extends Factory
         $name = fake()->words(3, true);
 
         return [
-            'user_id' => \App\Models\User::factory(),
+            'user_id' => User::factory(),
             'key' => fake()->slug(3),
             'label' => ucfirst($name),
             'description' => fake()->sentence(),

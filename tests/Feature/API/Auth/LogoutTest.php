@@ -6,7 +6,7 @@ use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
 
-it('can logout with valid token', function () {
+it('can logout with valid token', function (): void {
     $user = User::factory()->create();
     $token = $user->createToken('test-token')->plainTextToken;
 
@@ -24,7 +24,7 @@ it('can logout with valid token', function () {
         ]);
 });
 
-it('deletes the current access token on logout', function () {
+it('deletes the current access token on logout', function (): void {
     $user = User::factory()->create();
     $token = $user->createToken('test-token');
 
@@ -37,7 +37,7 @@ it('deletes the current access token on logout', function () {
     expect($user->tokens()->count())->toBe(0);
 });
 
-it('only deletes the current token when multiple tokens exist', function () {
+it('only deletes the current token when multiple tokens exist', function (): void {
     $user = User::factory()->create();
     $token1 = $user->createToken('token-1');
     $token2 = $user->createToken('token-2');
@@ -52,20 +52,20 @@ it('only deletes the current token when multiple tokens exist', function () {
     expect($user->tokens()->first()->name)->toBe('token-2');
 });
 
-it('requires authentication', function () {
+it('requires authentication', function (): void {
     $response = $this->postJson('/api/v1/auth/logout');
 
     $response->assertUnauthorized();
 });
 
-it('cannot logout with invalid token', function () {
+it('cannot logout with invalid token', function (): void {
     $response = $this->withToken('invalid-token')
         ->postJson('/api/v1/auth/logout');
 
     $response->assertUnauthorized();
 });
 
-it('cannot logout after token is deleted', function () {
+it('cannot logout after token is deleted', function (): void {
     $user = User::factory()->create();
     $token = $user->createToken('test-token');
 

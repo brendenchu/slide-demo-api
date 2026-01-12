@@ -14,7 +14,7 @@ beforeEach(function (): void {
     }
 });
 
-it('can register a new user with valid data', function () {
+it('can register a new user with valid data', function (): void {
     $response = $this->postJson('/api/v1/auth/register', [
         'name' => 'John Doe',
         'email' => 'john@example.com',
@@ -50,7 +50,7 @@ it('can register a new user with valid data', function () {
     expect(User::where('email', 'john@example.com')->exists())->toBeTrue();
 });
 
-it('assigns client role to newly registered users', function () {
+it('assigns client role to newly registered users', function (): void {
     $this->postJson('/api/v1/auth/register', [
         'name' => 'Jane Doe',
         'email' => 'jane@example.com',
@@ -62,7 +62,7 @@ it('assigns client role to newly registered users', function () {
     expect($user->hasRole('client'))->toBeTrue();
 });
 
-it('creates a profile for newly registered users', function () {
+it('creates a profile for newly registered users', function (): void {
     $this->postJson('/api/v1/auth/register', [
         'name' => 'Bob Smith',
         'email' => 'bob@example.com',
@@ -74,14 +74,14 @@ it('creates a profile for newly registered users', function () {
     expect($user->profile)->not->toBeNull();
 });
 
-it('validates required fields', function () {
+it('validates required fields', function (): void {
     $response = $this->postJson('/api/v1/auth/register', []);
 
     $response->assertStatus(422)
         ->assertJsonValidationErrors(['name', 'email', 'password']);
 });
 
-it('validates email format', function () {
+it('validates email format', function (): void {
     $response = $this->postJson('/api/v1/auth/register', [
         'name' => 'Test User',
         'email' => 'not-an-email',
@@ -93,7 +93,7 @@ it('validates email format', function () {
         ->assertJsonValidationErrors(['email']);
 });
 
-it('validates email uniqueness', function () {
+it('validates email uniqueness', function (): void {
     User::factory()->create(['email' => 'existing@example.com']);
 
     $response = $this->postJson('/api/v1/auth/register', [
@@ -107,7 +107,7 @@ it('validates email uniqueness', function () {
         ->assertJsonValidationErrors(['email']);
 });
 
-it('validates password confirmation', function () {
+it('validates password confirmation', function (): void {
     $response = $this->postJson('/api/v1/auth/register', [
         'name' => 'Test User',
         'email' => 'test@example.com',
@@ -119,7 +119,7 @@ it('validates password confirmation', function () {
         ->assertJsonValidationErrors(['password']);
 });
 
-it('validates password minimum length', function () {
+it('validates password minimum length', function (): void {
     $response = $this->postJson('/api/v1/auth/register', [
         'name' => 'Test User',
         'email' => 'test@example.com',

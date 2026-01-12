@@ -8,7 +8,7 @@ use Tests\TestCase;
 uses(TestCase::class, RefreshDatabase::class);
 
 // Get Current User Tests
-it('can get authenticated user', function () {
+it('can get authenticated user', function (): void {
     $user = User::factory()->create([
         'name' => 'John Doe',
         'email' => 'john@example.com',
@@ -41,7 +41,7 @@ it('can get authenticated user', function () {
         ]);
 });
 
-it('includes user profile in response', function () {
+it('includes user profile in response', function (): void {
     $user = User::factory()->create();
 
     Sanctum::actingAs($user);
@@ -66,14 +66,14 @@ it('includes user profile in response', function () {
     expect($response['data']['user']['permissions'])->toBeArray();
 });
 
-it('requires authentication to get user', function () {
+it('requires authentication to get user', function (): void {
     $response = $this->getJson('/api/v1/auth/user');
 
     $response->assertUnauthorized();
 });
 
 // Update Profile Tests
-it('can update authenticated user name', function () {
+it('can update authenticated user name', function (): void {
     $user = User::factory()->create([
         'name' => 'Old Name',
         'email' => 'user@example.com',
@@ -100,7 +100,7 @@ it('can update authenticated user name', function () {
     expect($user->fresh()->name)->toBe('New Name');
 });
 
-it('can update authenticated user email', function () {
+it('can update authenticated user email', function (): void {
     $user = User::factory()->create([
         'name' => 'John Doe',
         'email' => 'old@example.com',
@@ -127,7 +127,7 @@ it('can update authenticated user email', function () {
     expect($user->fresh()->email)->toBe('new@example.com');
 });
 
-it('can update both name and email', function () {
+it('can update both name and email', function (): void {
     $user = User::factory()->create([
         'name' => 'Old Name',
         'email' => 'old@example.com',
@@ -156,7 +156,7 @@ it('can update both name and email', function () {
     expect($user->email)->toBe('new@example.com');
 });
 
-it('can update profile with only name', function () {
+it('can update profile with only name', function (): void {
     $user = User::factory()->create([
         'name' => 'Old Name',
         'email' => 'user@example.com',
@@ -173,7 +173,7 @@ it('can update profile with only name', function () {
     expect($user->fresh()->email)->toBe('user@example.com');
 });
 
-it('can update profile with only email', function () {
+it('can update profile with only email', function (): void {
     $user = User::factory()->create([
         'name' => 'John Doe',
         'email' => 'old@example.com',
@@ -190,7 +190,7 @@ it('can update profile with only email', function () {
     expect($user->fresh()->email)->toBe('updated@example.com');
 });
 
-it('validates email format when updating', function () {
+it('validates email format when updating', function (): void {
     $user = User::factory()->create();
     Sanctum::actingAs($user);
 
@@ -202,7 +202,7 @@ it('validates email format when updating', function () {
         ->assertJsonValidationErrors(['email']);
 });
 
-it('validates email uniqueness when updating', function () {
+it('validates email uniqueness when updating', function (): void {
     User::factory()->create(['email' => 'existing@example.com']);
     $user = User::factory()->create(['email' => 'user@example.com']);
 
@@ -216,7 +216,7 @@ it('validates email uniqueness when updating', function () {
         ->assertJsonValidationErrors(['email']);
 });
 
-it('allows user to keep their own email when updating', function () {
+it('allows user to keep their own email when updating', function (): void {
     $user = User::factory()->create(['email' => 'user@example.com']);
     Sanctum::actingAs($user);
 
@@ -228,7 +228,7 @@ it('allows user to keep their own email when updating', function () {
     $response->assertSuccessful();
 });
 
-it('validates name is a string when updating', function () {
+it('validates name is a string when updating', function (): void {
     $user = User::factory()->create();
     Sanctum::actingAs($user);
 
@@ -240,7 +240,7 @@ it('validates name is a string when updating', function () {
         ->assertJsonValidationErrors(['name']);
 });
 
-it('validates name max length when updating', function () {
+it('validates name max length when updating', function (): void {
     $user = User::factory()->create();
     Sanctum::actingAs($user);
 
@@ -252,7 +252,7 @@ it('validates name max length when updating', function () {
         ->assertJsonValidationErrors(['name']);
 });
 
-it('validates email max length when updating', function () {
+it('validates email max length when updating', function (): void {
     $user = User::factory()->create();
     Sanctum::actingAs($user);
 
@@ -264,7 +264,7 @@ it('validates email max length when updating', function () {
         ->assertJsonValidationErrors(['email']);
 });
 
-it('requires authentication to update profile', function () {
+it('requires authentication to update profile', function (): void {
     $response = $this->putJson('/api/v1/auth/user', [
         'name' => 'New Name',
     ]);
@@ -272,7 +272,7 @@ it('requires authentication to update profile', function () {
     $response->assertUnauthorized();
 });
 
-it('allows empty update request', function () {
+it('allows empty update request', function (): void {
     $user = User::factory()->create([
         'name' => 'Original Name',
         'email' => 'original@example.com',

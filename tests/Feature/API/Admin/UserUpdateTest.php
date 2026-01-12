@@ -127,7 +127,7 @@ it('updates password when provided', function (): void {
     $response->assertSuccessful();
 
     $user->refresh();
-    expect(password_verify('new-password123', $user->password))->toBeTrue();
+    expect(password_verify('new-password123', (string) $user->password))->toBeTrue();
 });
 
 it('updates role when provided', function (): void {
@@ -342,5 +342,5 @@ it('updates multiple fields at once', function (): void {
 
     $user->refresh();
     expect($user->hasRole('consultant'))->toBeTrue();
-    expect(password_verify('new-password123', $user->password))->toBeTrue();
+    expect(password_verify('new-password123', (string) $user->password))->toBeTrue();
 });
