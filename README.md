@@ -1,110 +1,146 @@
-# Vue Slide Form Demo
+# Slide Form Demo
 
-A Laravel 12 application with Vue 3 + TypeScript frontend, demonstrating a multi-step slide form system with role-based access control.
+A Laravel 12 REST API demonstrating multi-step form workflows with role-based access control and token authentication.
 
 ## Overview
 
-This application showcases a production-ready implementation of a multi-step form system where users (clients, consultants, admins) interact with "Story" projects through an intuitive slide-based interface. The project emphasizes clean architecture, domain-driven design, and modern web development practices.
+Laravel backend providing a RESTful API for client applications. Implements domain-driven architecture with user management, project workflows, and team collaboration.
 
-### Key Features
+## Features
 
-- **Multi-Step Slide Forms** - Intuitive step-by-step form navigation with animations
-- **Role-Based Access Control** - Client, Guest, Consultant, Admin, and Super Admin roles
-- **Domain-Driven Architecture** - Code organized by business domain for maintainability
-- **Incremental Form Saving** - Progress automatically saved and resumable
-- **Modern Tech Stack** - Laravel 12, Vue 3 Composition API, TypeScript, Inertia.js v2
+- RESTful API with Laravel Sanctum token authentication
+- Frontend agnostic - supports any client framework
+- Multi-step form workflow system
+- Role-based access control (5 roles: Guest, Client, Consultant, Admin, Super Admin)
+- Domain-driven architecture
+- Incremental form saving
+- 328 backend tests with 100% API endpoint coverage
 
 ## Tech Stack
 
-### Backend
+- Laravel 12 (PHP 8.4+)
+- Laravel Sanctum v4
+- Spatie Laravel Permission
+- Pest v3
+- Scramble (OpenAPI 3.1.0)
+- MySQL/PostgreSQL/SQLite
 
-- **Laravel 12** - PHP 8.4+
-- **Laravel Sanctum** - API authentication
-- **Spatie Laravel Permission** - Role/permission management
-- **Pest v3** - Testing framework
+## Installation
 
-### Frontend
+```bash
+# Install dependencies
+composer install
 
-- **Vue 3** - Composition API with TypeScript
-- **Inertia.js v2** - SPA routing without building an API
-- **Tailwind CSS v3** - Utility-first CSS
-- **DaisyUI** - Component library
-- **Vite** - Frontend build tool
+# Configure environment
+cp .env.example .env
+php artisan key:generate
 
-## Architecture
+# Configure database
+# Edit .env: DB_CONNECTION=sqlite (or mysql, pgsql)
 
-This application follows **Domain-Driven Design (DDD)** principles with code organized by business domain:
+# Run migrations
+php artisan migrate --seed
+
+# Start server
+php artisan serve
+```
+
+API available at `http://localhost:8000`
+API documentation at `http://localhost:8000/docs/api`
+
+## Project Structure
+
+```
+app/
+├── Enums/                  # Domain-specific enums
+├── Http/
+│   ├── Controllers/API/    # REST API controllers (domain-organized)
+│   ├── Middleware/         # SecurityHeaders, CORS
+│   ├── Requests/           # Form validation classes
+│   └── Resources/          # API resource transformers
+├── Models/                 # Domain-organized Eloquent models
+└── Services/               # Business logic layer
+
+routes/
+└── api.php                 # REST API routes
+
+tests/
+├── Feature/API/            # API integration tests
+└── Unit/                   # Unit tests
+```
+
+## Domain Organization
+
+Code organized by business domain:
 
 - **Account** - User profiles, teams, subscriptions, terms
-- **Story** - Project/story workflow, forms, responses, tokens
+- **Story** - Project workflow, forms, responses, tokens
 - **Admin** - Administrative functions, user management
-- **Auth** - Authentication and authorization
-- **API** - External API endpoints
+- **Auth** - Authentication and user profile management
 
-For comprehensive architecture documentation, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+Core entities (User, Role, Permission) at root level.
 
-## Development Setup
+## API Documentation
 
-### Prerequisites
+Interactive documentation powered by Scramble:
 
-- PHP 8.4+
-- Composer
-- Node.js 18+
-- MySQL/PostgreSQL
-
-### Installation
-
-1. **Clone and install dependencies:**
-
-   ```bash
-   composer install
-   npm install
-   ```
-
-2. **Configure environment:**
-
-   ```bash
-   cp .env.example .env
-   php artisan key:generate
-   ```
-
-3. **Run migrations and seed:**
-
-   ```bash
-   php artisan migrate --seed
-   ```
-
-4. **Build frontend assets:**
-   ```bash
-   npm run build
-   # OR for development with hot reload:
-   npm run dev
-   ```
-
-### Development Commands
-
-#### Backend
-
-```bash
-php artisan test                    # Run all tests
-php artisan test --filter=testName # Run specific tests
-vendor/bin/pint                     # Format PHP code
-vendor/bin/pint --dirty             # Format only changed files
+```
+http://localhost:8000/docs/api
 ```
 
-#### Frontend
+OpenAPI 3.1.0 specification:
+- JSON: `docs/api/openapi.json`
+- Endpoint: `http://localhost:8000/docs/api.json`
+
+## Testing
 
 ```bash
-npm run dev         # Start Vite dev server with hot reload
-npm run build       # Build for production
-npm run type-check  # TypeScript type checking
-npm run lint        # Lint JavaScript/TypeScript/Vue
-npm run format      # Format with Prettier
+php artisan test
 ```
 
-### Demo Accounts
+328 tests, 1029 assertions:
+- API Endpoints: 100%
+- Authentication & Authorization: 100%
+- User Management: 59 tests
+- Projects/Stories: 69 tests
+- Teams: 40 tests
+- Rate Limiting: 4 tests
+- Security Headers: 5 tests
 
-The seeder creates demo accounts with the following credentials:
+## Security
+
+- Token-based authentication (Sanctum)
+- Security headers (CSP, X-Frame-Options, etc.)
+- Role-based access control
+- Permission-based authorization
+- Password hashing (bcrypt)
+- Mass assignment protection
+- Rate limiting (5 req/min auth, 60 req/min API)
+- Form Request validation
+- SQL injection prevention (Eloquent ORM)
+
+## Development
+
+```bash
+# Testing
+php artisan test
+php artisan test --filter=testName
+php artisan test --coverage
+
+# Code formatting
+vendor/bin/pint
+vendor/bin/pint --dirty
+
+# Database
+php artisan migrate
+php artisan migrate:fresh --seed
+php artisan db:seed
+
+# API documentation
+php artisan scramble:export
+```
+
+## Demo Accounts
 
 | Role        | Email                   | Password    |
 | ----------- | ----------------------- | ----------- |
@@ -114,92 +150,41 @@ The seeder creates demo accounts with the following credentials:
 | Admin       | admin@example.com       | admin       |
 | Super Admin | super-admin@example.com | super-admin |
 
-**Guest Login Alias:** You can login with just `guest` instead of the full email address (case-insensitive).
-
-## Project Structure
-
-```
-app/
-├── Enums/              Domain-specific enums
-├── Http/
-│   ├── Controllers/    Domain-organized controllers
-│   ├── Requests/       Form validation classes
-│   └── Resources/      API/frontend data transformers
-├── Models/             Domain-organized Eloquent models
-└── Services/           Business logic layer
-
-resources/
-├── js/
-│   ├── Components/     Reusable Vue components
-│   │   └── Slide/      Multi-step slide form system
-│   ├── Layouts/        Layout components
-│   └── Pages/          Inertia.js page components
-└── views/              Blade templates
-
-routes/
-├── web.php             Main router
-└── modules/            Route modules by domain
-```
-
-## Documentation
-
-- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - Comprehensive architecture documentation
-- **[CLAUDE.md](CLAUDE.md)** - Development guidelines for Claude Code
-
-## Development Guidelines
-
-### Adding New Features
-
-When adding new features, follow the domain-driven organization:
-
-1. **Identify the domain** - Account, Story, Admin, Auth, or API?
-2. **Follow existing patterns** - Check sibling files for conventions
-3. **Use the service layer** - Keep controllers thin, business logic in services
-4. **Write tests** - Feature tests for workflows, unit tests for services
-5. **Update documentation** - Keep CLAUDE.md and ARCHITECTURE.md current
-
-### Code Organization Rules
-
-- **Core entities** (User, Role, Permission) → Root level
-- **Domain entities** → Domain folders (Account/, Story/, etc.)
-- **Controllers** → Thin, delegate to services
-- **Services** → Business logic, multi-model coordination
-- **Form Requests** → Validation rules and authorization
-- **Resources** → Data transformation for frontend/API
-
-## Testing
-
-Tests use **Pest v3** with Laravel plugin:
+## Environment Configuration
 
 ```bash
-# Run all tests
-php artisan test
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://api.your-domain.com
 
-# Run specific test file
-php artisan test tests/Feature/Auth/LoginRequestTest.php
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_DATABASE=your_database
+DB_USERNAME=your_username
+DB_PASSWORD=your_password
 
-# Run with filter
-php artisan test --filter=guest_login
+FRONTEND_URL=https://app.your-domain.com
+SANCTUM_EXPIRATION=1440
 ```
 
-**Test Organization:**
+## Deployment
 
-- `tests/Feature/` - Integration tests organized by domain
-- `tests/Unit/` - Unit tests for models, services, enums
+Supported platforms:
+- Shared hosting (cPanel, PHP 8.4+)
+- VPS (DigitalOcean, Linode, AWS EC2)
+- Platform as a Service (Laravel Forge, Ploi, Envoyer)
+- Containerized (Docker, Kubernetes)
 
 ## Contributing
 
-1. Follow the domain-driven architecture patterns
-2. Write tests for all new features
+1. Follow domain-driven architecture patterns
+2. Maintain 100% API endpoint test coverage
 3. Use Form Request classes for validation
-4. Keep controllers thin - use services for business logic
-5. Run `vendor/bin/pint --dirty` before committing
-6. Check existing files for naming/structure conventions
+4. Use Resource classes for API responses
+5. Keep controllers thin, use services for business logic
+6. Run `vendor/bin/pint --dirty` before committing
+7. Run `php artisan test` before submitting
 
 ## License
 
-This is a demonstration project for educational purposes.
-
----
-
-**Built with ❤️ using Laravel 12, Vue 3, and Inertia.js**
+Demonstration project for educational purposes.
