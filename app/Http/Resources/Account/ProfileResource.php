@@ -14,6 +14,11 @@ class ProfileResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        // Return empty array if profile is missing/not loaded
+        if ($this->resource === null) {
+            return [];
+        }
+
         return [
             'id' => $this->public_id,
             'name' => trim($this->first_name . ' ' . $this->last_name),

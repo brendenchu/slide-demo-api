@@ -10,15 +10,14 @@
   "require": {
     "php": "^8.2",
     "ext-pdo": "*",
-    "inertiajs/inertia-laravel": "^2.0",
     "laravel/framework": "^12.0",
     "laravel/sanctum": "^4.1",
     "laravel/tinker": "^2.9",
-    "spatie/laravel-permission": "^6.9",
-    "tightenco/ziggy": "^2.4"
+    "spatie/laravel-permission": "^6.9"
   },
   "require-dev": {
     "barryvdh/laravel-debugbar": "^3.16",
+    "dedoc/scramble": "^0.13.10",
     "driftingly/rector-laravel": "^2.1",
     "fakerphp/faker": "^1.23",
     "laravel/boost": "^1.8",

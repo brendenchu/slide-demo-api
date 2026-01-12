@@ -104,6 +104,7 @@ class ProjectService
         try {
             // Create new project
             $project = $team->projects()->create([
+                'user_id' => auth()->id(),
                 'key' => Str::slug($validated['name'] . '-' . Str::random(6)),
                 'label' => $validated['name'],
                 'description' => $validated['description'],
@@ -256,7 +257,7 @@ class ProjectService
     /**
      * Publish the current project.
      *
-     * Changes project status to PUBLISHED and persists to database.
+     * Changes project status to Published and persists to database.
      *
      * @return bool True if successfully saved
      *
@@ -268,7 +269,7 @@ class ProjectService
             throw new Exception('No project set.');
         }
 
-        $this->project->status = ProjectStatus::PUBLISHED;
+        $this->project->status = ProjectStatus::Published;
 
         $saved = $this->project->save();
 
@@ -288,7 +289,7 @@ class ProjectService
     /**
      * Check if the current project is complete (published).
      *
-     * @return bool True if project status is PUBLISHED
+     * @return bool True if project status is Published
      *
      * @throws Exception If no project has been set
      */
@@ -298,7 +299,7 @@ class ProjectService
             throw new Exception('No project set.');
         }
 
-        return $this->project->status === ProjectStatus::PUBLISHED;
+        return $this->project->status === ProjectStatus::Published;
     }
 
     /**
