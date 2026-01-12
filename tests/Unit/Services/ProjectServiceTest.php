@@ -4,6 +4,7 @@ use App\Enums\Story\ProjectStatus;
 use App\Enums\Story\ProjectStep;
 use App\Models\Account\Team;
 use App\Models\Story\Project;
+use App\Models\User;
 use App\Services\ProjectService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
@@ -78,7 +79,7 @@ it('sets multiple steps with variadic arguments', function (): void {
 });
 
 it('creates project with validated data', function (): void {
-    $user = \App\Models\User::factory()->create();
+    $user = User::factory()->create();
     $this->actingAs($user);
 
     $team = Team::factory()->create();
@@ -101,7 +102,7 @@ it('creates project with validated data', function (): void {
 });
 
 it('creates project without validated data using auto-generated values', function (): void {
-    $user = \App\Models\User::factory()->create();
+    $user = User::factory()->create();
     $this->actingAs($user);
 
     $team = Team::factory()->create();
@@ -115,7 +116,7 @@ it('creates project without validated data using auto-generated values', functio
 });
 
 it('saves responses and creates new records', function (): void {
-    $user = \App\Models\User::factory()->create();
+    $user = User::factory()->create();
     $this->actingAs($user);
 
     $team = Team::factory()->create();
@@ -141,7 +142,7 @@ it('saves responses and creates new records', function (): void {
 });
 
 it('saves responses and updates existing records', function (): void {
-    $user = \App\Models\User::factory()->create();
+    $user = User::factory()->create();
     $this->actingAs($user);
 
     $team = Team::factory()->create();

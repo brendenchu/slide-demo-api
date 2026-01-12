@@ -12,9 +12,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::fallback(function () {
-    return response()->json([
-        'message' => 'This is an API-only application. Please use the API endpoints.',
-        'documentation' => '/api/documentation', // Update this with your actual API documentation URL
-    ], 404);
-});
+Route::fallback(fn () => response()->json([
+    'message' => 'This is an API-only application. Please use the API endpoints.',
+    'documentation' => '/api/documentation', // Update this with your actual API documentation URL
+], 404));

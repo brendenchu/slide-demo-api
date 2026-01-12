@@ -5,7 +5,7 @@ use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
 
-it('applies CSP headers to API endpoints', function () {
+it('applies CSP headers to API endpoints', function (): void {
     // Test a public API endpoint (login doesn't require auth)
     $response = $this->getJson('/api/v1/auth/login');
 
@@ -18,7 +18,7 @@ it('applies CSP headers to API endpoints', function () {
     $response->assertHeader('Permissions-Policy');
 });
 
-it('skips CSP headers for API documentation route when accessing in local environment', function () {
+it('skips CSP headers for API documentation route when accessing in local environment', function (): void {
     // Set environment to local to bypass RestrictedDocsAccess middleware
     config(['app.env' => 'local']);
 
@@ -35,7 +35,7 @@ it('skips CSP headers for API documentation route when accessing in local enviro
     $response->assertHeader('Permissions-Policy');
 });
 
-it('skips CSP headers for API documentation JSON route', function () {
+it('skips CSP headers for API documentation JSON route', function (): void {
     config(['app.env' => 'local']);
 
     $response = $this->get('/docs/api.json');
@@ -48,7 +48,7 @@ it('skips CSP headers for API documentation JSON route', function () {
     $response->assertHeader('X-Frame-Options', 'DENY');
 });
 
-it('has correct CSP directives on protected routes', function () {
+it('has correct CSP directives on protected routes', function (): void {
     $response = $this->getJson('/api/v1/auth/login');
 
     $csp = $response->headers->get('Content-Security-Policy');
@@ -62,7 +62,7 @@ it('has correct CSP directives on protected routes', function () {
     expect($csp)->toContain("frame-ancestors 'none'");
 });
 
-it('applies all security headers except CSP to all routes', function () {
+it('applies all security headers except CSP to all routes', function (): void {
     // Test that non-CSP headers are always present
     $response = $this->getJson('/api/v1/auth/login');
 

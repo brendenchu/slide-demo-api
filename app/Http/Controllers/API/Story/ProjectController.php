@@ -10,6 +10,7 @@ use App\Http\Resources\API\Story\ProjectResource;
 use App\Models\Story\Project;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class ProjectController extends ApiController
 {
@@ -61,7 +62,7 @@ class ProjectController extends ApiController
     {
         $project = Project::create([
             'user_id' => $request->user()->id,
-            'key' => \Illuminate\Support\Str::slug($request->input('title')) . '-' . \Illuminate\Support\Str::random(6),
+            'key' => Str::slug($request->input('title')) . '-' . Str::random(6),
             'label' => $request->input('title'),
             'description' => $request->input('description'),
             'status' => ProjectStatus::Draft->value,

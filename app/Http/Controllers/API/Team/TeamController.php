@@ -84,7 +84,7 @@ class TeamController extends ApiController
             };
         }
 
-        if (! empty($data)) {
+        if ($data !== []) {
             $team->update($data);
         }
 

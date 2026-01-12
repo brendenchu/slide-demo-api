@@ -1,7 +1,9 @@
 <?php
 
+use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -18,9 +20,9 @@ return new class extends Migration
         });
 
         // Assign existing projects to first user if any exist
-        $firstUser = \App\Models\User::first();
+        $firstUser = User::first();
         if ($firstUser) {
-            \Illuminate\Support\Facades\DB::table('projects')
+            DB::table('projects')
                 ->whereNull('user_id')
                 ->update(['user_id' => $firstUser->id]);
         }

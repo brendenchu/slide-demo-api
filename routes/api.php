@@ -1,7 +1,15 @@
 <?php
 
+use App\Http\Controllers\API\Auth\LoginController;
+use App\Http\Controllers\API\Auth\LogoutController;
+use App\Http\Controllers\API\Auth\RegisterController;
+use App\Http\Controllers\API\Auth\UserController;
 use App\Http\Controllers\API\GetCurrentTeamController;
 use App\Http\Controllers\API\SetCurrentTeamController;
+use App\Http\Controllers\API\Story\CompleteProjectController;
+use App\Http\Controllers\API\Story\ProjectController;
+use App\Http\Controllers\API\Story\SaveResponseController;
+use App\Http\Controllers\API\Team\TeamController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -19,8 +27,8 @@ Route::prefix('v1')->group(function (): void {
 
     // Public authentication routes with strict rate limiting (5 attempts per minute)
     Route::prefix('auth')->middleware('throttle:5,1')->group(function (): void {
-        Route::post('login', \App\Http\Controllers\API\Auth\LoginController::class)->name('api.v1.auth.login');
-        Route::post('register', \App\Http\Controllers\API\Auth\RegisterController::class)->name('api.v1.auth.register');
+        Route::post('login', LoginController::class)->name('api.v1.auth.login');
+        Route::post('register', RegisterController::class)->name('api.v1.auth.register');
     });
 
     // Protected routes (require authentication) with standard rate limiting (60 per minute)
@@ -28,20 +36,20 @@ Route::prefix('v1')->group(function (): void {
 
         // Auth user profile routes
         Route::prefix('auth')->group(function (): void {
-            Route::post('logout', \App\Http\Controllers\API\Auth\LogoutController::class)->name('api.v1.auth.logout');
-            Route::get('user', [\App\Http\Controllers\API\Auth\UserController::class, 'show'])->name('api.v1.auth.user');
-            Route::put('user', [\App\Http\Controllers\API\Auth\UserController::class, 'update'])->name('api.v1.auth.update');
+            Route::post('logout', LogoutController::class)->name('api.v1.auth.logout');
+            Route::get('user', [UserController::class, 'show'])->name('api.v1.auth.user');
+            Route::put('user', [UserController::class, 'update'])->name('api.v1.auth.update');
         });
 
         // Projects routes
         Route::prefix('projects')->group(function (): void {
-            Route::get('/', [\App\Http\Controllers\API\Story\ProjectController::class, 'index'])->name('api.v1.projects.index');
-            Route::post('/', [\App\Http\Controllers\API\Story\ProjectController::class, 'store'])->name('api.v1.projects.store');
-            Route::get('/{id}', [\App\Http\Controllers\API\Story\ProjectController::class, 'show'])->name('api.v1.projects.show');
-            Route::put('/{id}', [\App\Http\Controllers\API\Story\ProjectController::class, 'update'])->name('api.v1.projects.update');
-            Route::delete('/{id}', [\App\Http\Controllers\API\Story\ProjectController::class, 'destroy'])->name('api.v1.projects.destroy');
-            Route::post('/{id}/responses', \App\Http\Controllers\API\Story\SaveResponseController::class)->name('api.v1.projects.save-responses');
-            Route::post('/{id}/complete', \App\Http\Controllers\API\Story\CompleteProjectController::class)->name('api.v1.projects.complete');
+            Route::get('/', [ProjectController::class, 'index'])->name('api.v1.projects.index');
+            Route::post('/', [ProjectController::class, 'store'])->name('api.v1.projects.store');
+            Route::get('/{id}', [ProjectController::class, 'show'])->name('api.v1.projects.show');
+            Route::put('/{id}', [ProjectController::class, 'update'])->name('api.v1.projects.update');
+            Route::delete('/{id}', [ProjectController::class, 'destroy'])->name('api.v1.projects.destroy');
+            Route::post('/{id}/responses', SaveResponseController::class)->name('api.v1.projects.save-responses');
+            Route::post('/{id}/complete', CompleteProjectController::class)->name('api.v1.projects.complete');
         });
 
         // Admin routes (require permission)
@@ -57,10 +65,10 @@ Route::prefix('v1')->group(function (): void {
 
         // Teams routes
         Route::prefix('teams')->group(function (): void {
-            Route::get('/', [\App\Http\Controllers\API\Team\TeamController::class, 'index'])->name('api.v1.teams.index');
-            Route::post('/', [\App\Http\Controllers\API\Team\TeamController::class, 'store'])->name('api.v1.teams.store');
-            Route::get('/{id}', [\App\Http\Controllers\API\Team\TeamController::class, 'show'])->name('api.v1.teams.show');
-            Route::put('/{id}', [\App\Http\Controllers\API\Team\TeamController::class, 'update'])->name('api.v1.teams.update');
+            Route::get('/', [TeamController::class, 'index'])->name('api.v1.teams.index');
+            Route::post('/', [TeamController::class, 'store'])->name('api.v1.teams.store');
+            Route::get('/{id}', [TeamController::class, 'show'])->name('api.v1.teams.show');
+            Route::put('/{id}', [TeamController::class, 'update'])->name('api.v1.teams.update');
         });
     });
 });
