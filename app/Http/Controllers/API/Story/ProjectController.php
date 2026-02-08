@@ -20,9 +20,10 @@ class ProjectController extends ApiController
             ->with('user.profile', 'teams')
             ->where('user_id', $request->user()->id);
 
-        // Filter by team if provided (via teams_projects pivot)
-        if ($request->filled('team')) {
-            $query->whereHas('teams', fn ($q) => $q->where('teams.public_id', $request->input('team')));
+        // Scope to user's current team
+        $currentTeam = $request->user()->currentTeam();
+        if ($currentTeam) {
+            $query->whereHas('teams', fn ($q) => $q->where('teams.id', $currentTeam->id));
         }
 
         // Filter by status if provided

@@ -10,9 +10,27 @@ use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
 
+/**
+ * Create a project attached to the user's current team.
+ *
+ * @param  array<string, mixed>  $attributes
+ */
+function createProjectForUser(User $user, array $attributes = []): Project
+{
+    $project = Project::factory()->create(array_merge(['user_id' => $user->id], $attributes));
+    $currentTeam = $user->currentTeam();
+    if ($currentTeam) {
+        $project->teams()->attach($currentTeam->id);
+    }
+
+    return $project;
+}
+
 it('can list authenticated users projects', function (): void {
     $user = User::factory()->create();
-    Project::factory()->count(3)->create(['user_id' => $user->id]);
+    createProjectForUser($user);
+    createProjectForUser($user);
+    createProjectForUser($user);
     Project::factory()->count(2)->create(); // Other user's projects
 
     Sanctum::actingAs($user);
@@ -42,12 +60,8 @@ it('requires authentication to list projects', function (): void {
 
 it('can filter projects by draft status', function (): void {
     $user = User::factory()->create();
-    Project::factory()->create([
-        'user_id' => $user->id,
-    ]); // Will be Draft by default
-    $inProgress = Project::factory()->create([
-        'user_id' => $user->id,
-    ]);
+    createProjectForUser($user); // Draft by default
+    $inProgress = createProjectForUser($user);
     $inProgress->update(['status' => ProjectStatus::InProgress->value]);
 
     Sanctum::actingAs($user);
@@ -60,12 +74,8 @@ it('can filter projects by draft status', function (): void {
 
 it('can filter projects by in_progress status', function (): void {
     $user = User::factory()->create();
-    Project::factory()->create([
-        'user_id' => $user->id,
-    ]); // Will be Draft by default
-    $inProgress = Project::factory()->create([
-        'user_id' => $user->id,
-    ]);
+    createProjectForUser($user); // Draft by default
+    $inProgress = createProjectForUser($user);
     $inProgress->update(['status' => ProjectStatus::InProgress->value]);
 
     Sanctum::actingAs($user);
@@ -78,12 +88,8 @@ it('can filter projects by in_progress status', function (): void {
 
 it('can filter projects by completed status', function (): void {
     $user = User::factory()->create();
-    Project::factory()->create([
-        'user_id' => $user->id,
-    ]); // Will be Draft by default
-    $completed = Project::factory()->create([
-        'user_id' => $user->id,
-    ]);
+    createProjectForUser($user); // Draft by default
+    $completed = createProjectForUser($user);
     $completed->update(['status' => ProjectStatus::Completed->value]);
 
     Sanctum::actingAs($user);
@@ -96,7 +102,9 @@ it('can filter projects by completed status', function (): void {
 
 it('ignores invalid status filter values', function (): void {
     $user = User::factory()->create();
-    Project::factory()->count(3)->create(['user_id' => $user->id]);
+    createProjectForUser($user);
+    createProjectForUser($user);
+    createProjectForUser($user);
 
     Sanctum::actingAs($user);
 
@@ -108,18 +116,9 @@ it('ignores invalid status filter values', function (): void {
 
 it('can search projects by label', function (): void {
     $user = User::factory()->create();
-    Project::factory()->create([
-        'user_id' => $user->id,
-        'label' => 'My Special Project',
-    ]);
-    Project::factory()->create([
-        'user_id' => $user->id,
-        'label' => 'Another Project',
-    ]);
-    Project::factory()->create([
-        'user_id' => $user->id,
-        'label' => 'Third Project',
-    ]);
+    createProjectForUser($user, ['label' => 'My Special Project']);
+    createProjectForUser($user, ['label' => 'Another Project']);
+    createProjectForUser($user, ['label' => 'Third Project']);
 
     Sanctum::actingAs($user);
 
@@ -132,7 +131,8 @@ it('can search projects by label', function (): void {
 
 it('returns empty array when no projects match search', function (): void {
     $user = User::factory()->create();
-    Project::factory()->count(2)->create(['user_id' => $user->id]);
+    createProjectForUser($user);
+    createProjectForUser($user);
 
     Sanctum::actingAs($user);
 
@@ -144,18 +144,15 @@ it('returns empty array when no projects match search', function (): void {
 
 it('returns projects ordered by updated_at descending', function (): void {
     $user = User::factory()->create();
-    $oldProject = Project::factory()->create([
-        'user_id' => $user->id,
+    createProjectForUser($user, [
         'label' => 'Old Project',
         'updated_at' => now()->subDays(5),
     ]);
-    $newProject = Project::factory()->create([
-        'user_id' => $user->id,
+    createProjectForUser($user, [
         'label' => 'New Project',
         'updated_at' => now(),
     ]);
-    $middleProject = Project::factory()->create([
-        'user_id' => $user->id,
+    createProjectForUser($user, [
         'label' => 'Middle Project',
         'updated_at' => now()->subDays(2),
     ]);
@@ -172,19 +169,10 @@ it('returns projects ordered by updated_at descending', function (): void {
 
 it('can combine status filter and search', function (): void {
     $user = User::factory()->create();
-    Project::factory()->create([
-        'user_id' => $user->id,
-        'label' => 'Draft Special',
-    ]); // Will be Draft by default
-    $inProgress = Project::factory()->create([
-        'user_id' => $user->id,
-        'label' => 'Special Progress',
-    ]);
+    createProjectForUser($user, ['label' => 'Draft Special']); // Draft by default
+    $inProgress = createProjectForUser($user, ['label' => 'Special Progress']);
     $inProgress->update(['status' => ProjectStatus::InProgress->value]);
-    Project::factory()->create([
-        'user_id' => $user->id,
-        'label' => 'Other Draft',
-    ]); // Will be Draft by default
+    createProjectForUser($user, ['label' => 'Other Draft']); // Draft by default
 
     Sanctum::actingAs($user);
 
@@ -206,30 +194,14 @@ it('returns empty array when user has no projects', function (): void {
         ->assertJsonCount(0, 'data');
 });
 
-it('can filter projects by team', function (): void {
+it('scopes projects to current team', function (): void {
     $user = User::factory()->create();
     $teamA = Team::factory()->create();
     $teamB = Team::factory()->create();
 
-    $projectA = Project::factory()->create(['user_id' => $user->id]);
-    $projectA->teams()->sync([$teamA->id]);
-
-    $projectB = Project::factory()->create(['user_id' => $user->id]);
-    $projectB->teams()->sync([$teamB->id]);
-
-    Sanctum::actingAs($user);
-
-    $response = $this->getJson("/api/v1/projects?team={$teamA->public_id}");
-
-    $response->assertSuccessful()
-        ->assertJsonCount(1, 'data')
-        ->assertJsonPath('data.0.id', $projectA->public_id);
-});
-
-it('returns all projects when no team filter is provided', function (): void {
-    $user = User::factory()->create();
-    $teamA = Team::factory()->create();
-    $teamB = Team::factory()->create();
+    $user->teams()->attach($teamA->id, ['is_admin' => true]);
+    $user->teams()->attach($teamB->id, ['is_admin' => false]);
+    $user->setSetting('current_team', $teamA->key);
 
     $projectA = Project::factory()->create(['user_id' => $user->id]);
     $projectA->teams()->sync([$teamA->id]);
@@ -242,20 +214,25 @@ it('returns all projects when no team filter is provided', function (): void {
     $response = $this->getJson('/api/v1/projects');
 
     $response->assertSuccessful()
-        ->assertJsonCount(2, 'data');
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $projectA->public_id);
 });
 
-it('returns empty results when filtering by team with no matching projects', function (): void {
+it('returns empty results when current team has no projects', function (): void {
     $user = User::factory()->create();
     $teamA = Team::factory()->create();
     $teamB = Team::factory()->create();
+
+    $user->teams()->attach($teamA->id, ['is_admin' => true]);
+    $user->teams()->attach($teamB->id, ['is_admin' => false]);
+    $user->setSetting('current_team', $teamB->key);
 
     $project = Project::factory()->create(['user_id' => $user->id]);
     $project->teams()->sync([$teamA->id]);
 
     Sanctum::actingAs($user);
 
-    $response = $this->getJson("/api/v1/projects?team={$teamB->public_id}");
+    $response = $this->getJson('/api/v1/projects');
 
     $response->assertSuccessful()
         ->assertJsonCount(0, 'data');
