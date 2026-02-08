@@ -10,7 +10,11 @@ use App\Http\Controllers\API\SetCurrentTeamController;
 use App\Http\Controllers\API\Story\CompleteProjectController;
 use App\Http\Controllers\API\Story\ProjectController;
 use App\Http\Controllers\API\Story\SaveResponseController;
+use App\Http\Controllers\API\Team\AcceptInvitationController;
 use App\Http\Controllers\API\Team\TeamController;
+use App\Http\Controllers\API\Team\TeamInvitationController;
+use App\Http\Controllers\API\Team\TeamMemberController;
+use App\Http\Controllers\API\Team\UserInvitationController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -70,9 +74,26 @@ Route::prefix('v1')->group(function (): void {
         Route::prefix('teams')->group(function (): void {
             Route::get('/', [TeamController::class, 'index'])->name('api.v1.teams.index');
             Route::post('/', [TeamController::class, 'store'])->name('api.v1.teams.store');
-            Route::get('/{id}', [TeamController::class, 'show'])->name('api.v1.teams.show');
-            Route::put('/{id}', [TeamController::class, 'update'])->name('api.v1.teams.update');
+            Route::post('/current', SetCurrentTeamController::class)->name('api.v1.teams.set-current');
+            Route::get('/{teamId}', [TeamController::class, 'show'])->name('api.v1.teams.show');
+            Route::put('/{teamId}', [TeamController::class, 'update'])->name('api.v1.teams.update');
+            Route::delete('/{teamId}', [TeamController::class, 'destroy'])->name('api.v1.teams.destroy');
+
+            // Team members
+            Route::get('/{teamId}/members', [TeamMemberController::class, 'index'])->name('api.v1.teams.members.index');
+            Route::delete('/{teamId}/members/{userId}', [TeamMemberController::class, 'destroy'])->name('api.v1.teams.members.destroy');
+            Route::put('/{teamId}/members/{userId}/role', [TeamMemberController::class, 'updateRole'])->name('api.v1.teams.members.update-role');
+
+            // Team invitations
+            Route::get('/{teamId}/invitations', [TeamInvitationController::class, 'index'])->name('api.v1.teams.invitations.index');
+            Route::post('/{teamId}/invitations', [TeamInvitationController::class, 'store'])->name('api.v1.teams.invitations.store');
+            Route::delete('/{teamId}/invitations/{invitationId}', [TeamInvitationController::class, 'destroy'])->name('api.v1.teams.invitations.destroy');
         });
+
+        // User invitations
+        Route::get('/invitations', [UserInvitationController::class, 'index'])->name('api.v1.invitations.index');
+        Route::post('/invitations/{invitationId}/accept', AcceptInvitationController::class)->name('api.v1.invitations.accept');
+        Route::post('/invitations/{invitationId}/decline', [UserInvitationController::class, 'decline'])->name('api.v1.invitations.decline');
     });
 });
 

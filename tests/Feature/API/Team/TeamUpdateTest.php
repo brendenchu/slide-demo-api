@@ -8,12 +8,12 @@ use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
 
-it('updates a team by id when user is a member', function (): void {
+it('updates a team by id when user is an admin', function (): void {
     $user = User::factory()->create();
     Sanctum::actingAs($user);
 
     $team = Team::factory()->create(['label' => 'Old Name']);
-    $team->users()->attach($user->id);
+    $team->users()->attach($user->id, ['is_admin' => true]);
 
     $response = $this->putJson("/api/v1/teams/{$team->id}", [
         'name' => 'New Name',
@@ -47,12 +47,12 @@ it('updates a team by id when user is a member', function (): void {
     ]);
 });
 
-it('updates a team by public_id when user is a member', function (): void {
+it('updates a team by public_id when user is an admin', function (): void {
     $user = User::factory()->create();
     Sanctum::actingAs($user);
 
     $team = Team::factory()->create(['label' => 'Old Name']);
-    $team->users()->attach($user->id);
+    $team->users()->attach($user->id, ['is_admin' => true]);
 
     $response = $this->putJson("/api/v1/teams/{$team->public_id}", [
         'name' => 'New Name',
@@ -72,7 +72,7 @@ it('updates only name when only name is provided', function (): void {
     Sanctum::actingAs($user);
 
     $team = Team::factory()->create(['label' => 'Old Name', 'description' => 'Original description']);
-    $team->users()->attach($user->id);
+    $team->users()->attach($user->id, ['is_admin' => true]);
 
     $response = $this->putJson("/api/v1/teams/{$team->id}", [
         'name' => 'New Name',
@@ -92,7 +92,7 @@ it('updates only description when only description is provided', function (): vo
     Sanctum::actingAs($user);
 
     $team = Team::factory()->create(['label' => 'Team Name', 'description' => 'Old description']);
-    $team->users()->attach($user->id);
+    $team->users()->attach($user->id, ['is_admin' => true]);
 
     $response = $this->putJson("/api/v1/teams/{$team->id}", [
         'description' => 'New description',
@@ -112,7 +112,7 @@ it('can clear description by setting it to null', function (): void {
     Sanctum::actingAs($user);
 
     $team = Team::factory()->create(['description' => 'Some description']);
-    $team->users()->attach($user->id);
+    $team->users()->attach($user->id, ['is_admin' => true]);
 
     $response = $this->putJson("/api/v1/teams/{$team->id}", [
         'description' => null,
@@ -129,7 +129,7 @@ it('updates team status to active', function (): void {
     Sanctum::actingAs($user);
 
     $team = Team::factory()->create(['status' => 2]);
-    $team->users()->attach($user->id);
+    $team->users()->attach($user->id, ['is_admin' => true]);
 
     $response = $this->putJson("/api/v1/teams/{$team->id}", [
         'status' => 'active',
@@ -146,7 +146,7 @@ it('updates team status to inactive', function (): void {
     Sanctum::actingAs($user);
 
     $team = Team::factory()->create(['status' => 1]);
-    $team->users()->attach($user->id);
+    $team->users()->attach($user->id, ['is_admin' => true]);
 
     $response = $this->putJson("/api/v1/teams/{$team->id}", [
         'status' => 'inactive',
@@ -163,7 +163,7 @@ it('validates name is string', function (): void {
     Sanctum::actingAs($user);
 
     $team = Team::factory()->create();
-    $team->users()->attach($user->id);
+    $team->users()->attach($user->id, ['is_admin' => true]);
 
     $response = $this->putJson("/api/v1/teams/{$team->id}", [
         'name' => 123,
@@ -178,7 +178,7 @@ it('validates name max length', function (): void {
     Sanctum::actingAs($user);
 
     $team = Team::factory()->create();
-    $team->users()->attach($user->id);
+    $team->users()->attach($user->id, ['is_admin' => true]);
 
     $response = $this->putJson("/api/v1/teams/{$team->id}", [
         'name' => str_repeat('a', 256),
@@ -193,7 +193,7 @@ it('validates description is string', function (): void {
     Sanctum::actingAs($user);
 
     $team = Team::factory()->create();
-    $team->users()->attach($user->id);
+    $team->users()->attach($user->id, ['is_admin' => true]);
 
     $response = $this->putJson("/api/v1/teams/{$team->id}", [
         'description' => 123,
@@ -208,7 +208,7 @@ it('validates status is valid value', function (): void {
     Sanctum::actingAs($user);
 
     $team = Team::factory()->create();
-    $team->users()->attach($user->id);
+    $team->users()->attach($user->id, ['is_admin' => true]);
 
     $response = $this->putJson("/api/v1/teams/{$team->id}", [
         'status' => 'invalid-status',
@@ -218,13 +218,13 @@ it('validates status is valid value', function (): void {
         ->assertJsonValidationErrors(['status']);
 });
 
-it('denies access when user is not a team member', function (): void {
+it('denies access when user is not a team admin', function (): void {
     $user = User::factory()->create();
     Sanctum::actingAs($user);
 
     $otherUser = User::factory()->create();
     $team = Team::factory()->create();
-    $team->users()->attach($otherUser->id);
+    $team->users()->attach($otherUser->id, ['is_admin' => true]);
 
     $response = $this->putJson("/api/v1/teams/{$team->id}", [
         'name' => 'New Name',
@@ -233,17 +233,17 @@ it('denies access when user is not a team member', function (): void {
     $response->assertForbidden()
         ->assertJson([
             'success' => false,
-            'message' => 'You do not have access to this team',
+            'message' => 'Only team admins can update team settings',
         ]);
 });
 
-it('denies access by public_id when user is not a team member', function (): void {
+it('denies access by public_id when user is not a team admin', function (): void {
     $user = User::factory()->create();
     Sanctum::actingAs($user);
 
     $otherUser = User::factory()->create();
     $team = Team::factory()->create();
-    $team->users()->attach($otherUser->id);
+    $team->users()->attach($otherUser->id, ['is_admin' => true]);
 
     $response = $this->putJson("/api/v1/teams/{$team->public_id}", [
         'name' => 'New Name',
@@ -252,7 +252,7 @@ it('denies access by public_id when user is not a team member', function (): voi
     $response->assertForbidden()
         ->assertJson([
             'success' => false,
-            'message' => 'You do not have access to this team',
+            'message' => 'Only team admins can update team settings',
         ]);
 });
 
@@ -297,7 +297,7 @@ it('updates multiple fields at once', function (): void {
         'description' => 'Old description',
         'status' => 1,
     ]);
-    $team->users()->attach($user->id);
+    $team->users()->attach($user->id, ['is_admin' => true]);
 
     $response = $this->putJson("/api/v1/teams/{$team->id}", [
         'name' => 'New Name',
@@ -323,7 +323,7 @@ it('does not update key when name is changed', function (): void {
 
     $team = Team::factory()->create(['label' => 'Old Team Name']);
     $originalKey = $team->key;
-    $team->users()->attach($user->id);
+    $team->users()->attach($user->id, ['is_admin' => true]);
 
     $response = $this->putJson("/api/v1/teams/{$team->id}", [
         'name' => 'New Team Name',

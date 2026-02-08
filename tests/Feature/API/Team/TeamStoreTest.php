@@ -44,7 +44,7 @@ it('creates a new team', function (): void {
     ]);
 });
 
-it('adds authenticated user to created team', function (): void {
+it('adds authenticated user to created team as admin', function (): void {
     $user = User::factory()->create();
     Sanctum::actingAs($user);
 
@@ -56,6 +56,7 @@ it('adds authenticated user to created team', function (): void {
 
     $team = Team::where('label', 'New Team')->first();
     expect($team->users->contains($user))->toBeTrue();
+    expect($team->isAdmin($user))->toBeTrue();
 });
 
 it('creates team with active status by default', function (): void {

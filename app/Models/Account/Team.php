@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 /**
@@ -78,7 +79,28 @@ class Team extends Model
      */
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'users_teams');
+        return $this->belongsToMany(User::class, 'users_teams')
+            ->withPivot('is_admin')
+            ->withTimestamps();
+    }
+
+    /**
+     * The invitations for the team.
+     */
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(TeamInvitation::class);
+    }
+
+    /**
+     * Check if a user is an admin of this team.
+     */
+    public function isAdmin(User $user): bool
+    {
+        return $this->users()
+            ->where('users.id', $user->id)
+            ->wherePivot('is_admin', true)
+            ->exists();
     }
 
     /**
