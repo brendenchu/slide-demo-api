@@ -24,7 +24,8 @@ class UpdateProfileRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['sometimes', 'string', 'max:255'],
+            'first_name' => ['sometimes', 'string', 'max:255'],
+            'last_name' => ['sometimes', 'string', 'max:255'],
             'email' => [
                 'sometimes',
                 'string',
@@ -41,8 +42,10 @@ class UpdateProfileRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.string' => 'Name must be a string',
-            'name.max' => 'Name cannot exceed 255 characters',
+            'first_name.string' => 'First name must be a string',
+            'first_name.max' => 'First name cannot exceed 255 characters',
+            'last_name.string' => 'Last name must be a string',
+            'last_name.max' => 'Last name cannot exceed 255 characters',
             'email.email' => 'Please provide a valid email address',
             'email.unique' => 'This email address is already in use',
         ];

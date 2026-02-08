@@ -6,12 +6,14 @@ namespace App\Models;
 use App\Enums\Account\TeamStatus;
 use App\Models\Account\Profile;
 use App\Models\Account\Team;
+use App\Models\Account\TeamInvitation;
 use App\Traits\AcceptsTerms;
 use App\Traits\HasSettings;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -73,7 +75,25 @@ class User extends Authenticatable
      */
     public function teams(): BelongsToMany
     {
-        return $this->belongsToMany(Team::class, 'users_teams');
+        return $this->belongsToMany(Team::class, 'users_teams')
+            ->withPivot('is_admin')
+            ->withTimestamps();
+    }
+
+    /**
+     * The teams owned by the user.
+     */
+    public function ownedTeams(): HasMany
+    {
+        return $this->hasMany(Team::class, 'owner_id');
+    }
+
+    /**
+     * The team invitations for the user.
+     */
+    public function teamInvitations(): HasMany
+    {
+        return $this->hasMany(TeamInvitation::class, 'user_id');
     }
 
     /**
@@ -99,11 +119,15 @@ class User extends Authenticatable
 
             $team_name = $name[0] . "'s Team";
 
-            $team = $user->teams()->create([
+            $team = Team::create([
                 'key' => Str::slug($team_name),
                 'label' => $team_name,
                 'status' => TeamStatus::ACTIVE,
+                'is_personal' => true,
+                'owner_id' => $user->id,
             ]);
+
+            $user->teams()->attach($team->id, ['is_admin' => true]);
 
             $user->setSetting('current_team', $team->key);
         });

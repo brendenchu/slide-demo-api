@@ -82,7 +82,8 @@ it('can update authenticated user name', function (): void {
     Sanctum::actingAs($user);
 
     $response = $this->putJson('/api/v1/auth/user', [
-        'name' => 'New Name',
+        'first_name' => 'New',
+        'last_name' => 'Name',
     ]);
 
     $response->assertSuccessful()
@@ -136,7 +137,8 @@ it('can update both name and email', function (): void {
     Sanctum::actingAs($user);
 
     $response = $this->putJson('/api/v1/auth/user', [
-        'name' => 'New Name',
+        'first_name' => 'New',
+        'last_name' => 'Name',
         'email' => 'new@example.com',
     ]);
 
@@ -156,7 +158,7 @@ it('can update both name and email', function (): void {
     expect($user->email)->toBe('new@example.com');
 });
 
-it('can update profile with only name', function (): void {
+it('can update profile with only first name', function (): void {
     $user = User::factory()->create([
         'name' => 'Old Name',
         'email' => 'user@example.com',
@@ -165,11 +167,11 @@ it('can update profile with only name', function (): void {
     Sanctum::actingAs($user);
 
     $response = $this->putJson('/api/v1/auth/user', [
-        'name' => 'Updated Name',
+        'first_name' => 'Updated',
     ]);
 
     $response->assertSuccessful();
-    expect($user->fresh()->name)->toBe('Updated Name');
+    expect($user->fresh()->profile->first_name)->toBe('Updated');
     expect($user->fresh()->email)->toBe('user@example.com');
 });
 
@@ -221,35 +223,59 @@ it('allows user to keep their own email when updating', function (): void {
     Sanctum::actingAs($user);
 
     $response = $this->putJson('/api/v1/auth/user', [
-        'name' => 'Updated Name',
+        'first_name' => 'Updated',
         'email' => 'user@example.com',
     ]);
 
     $response->assertSuccessful();
 });
 
-it('validates name is a string when updating', function (): void {
+it('validates first_name is a string when updating', function (): void {
     $user = User::factory()->create();
     Sanctum::actingAs($user);
 
     $response = $this->putJson('/api/v1/auth/user', [
-        'name' => 123,
+        'first_name' => 123,
     ]);
 
     $response->assertStatus(422)
-        ->assertJsonValidationErrors(['name']);
+        ->assertJsonValidationErrors(['first_name']);
 });
 
-it('validates name max length when updating', function (): void {
+it('validates first_name max length when updating', function (): void {
     $user = User::factory()->create();
     Sanctum::actingAs($user);
 
     $response = $this->putJson('/api/v1/auth/user', [
-        'name' => str_repeat('a', 256),
+        'first_name' => str_repeat('a', 256),
     ]);
 
     $response->assertStatus(422)
-        ->assertJsonValidationErrors(['name']);
+        ->assertJsonValidationErrors(['first_name']);
+});
+
+it('validates last_name is a string when updating', function (): void {
+    $user = User::factory()->create();
+    Sanctum::actingAs($user);
+
+    $response = $this->putJson('/api/v1/auth/user', [
+        'last_name' => 123,
+    ]);
+
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['last_name']);
+});
+
+it('validates last_name max length when updating', function (): void {
+    $user = User::factory()->create();
+    Sanctum::actingAs($user);
+
+    $response = $this->putJson('/api/v1/auth/user', [
+        'last_name' => str_repeat('a', 256),
+    ]);
+
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['last_name']);
 });
 
 it('validates email max length when updating', function (): void {

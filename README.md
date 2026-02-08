@@ -14,7 +14,8 @@ Laravel backend providing a RESTful API for client applications. Implements doma
 - Role-based access control (5 roles: Guest, Client, Consultant, Admin, Super Admin)
 - Domain-driven architecture
 - Incremental form saving
-- 328 backend tests with 100% API endpoint coverage
+- Team ownership and ownership transfer
+- 416 backend tests with 100% API endpoint coverage
 
 ## Tech Stack
 
@@ -98,12 +99,12 @@ OpenAPI 3.1.0 specification:
 php artisan test
 ```
 
-328 tests, 1029 assertions:
+416 tests, 1277 assertions:
 - API Endpoints: 100%
 - Authentication & Authorization: 100%
 - User Management: 59 tests
 - Projects/Stories: 69 tests
-- Teams: 40 tests
+- Teams: 119 tests (members, invitations, ownership transfer)
 - Rate Limiting: 4 tests
 - Security Headers: 5 tests
 

@@ -15,19 +15,19 @@ class TeamController extends ApiController
 {
     public function index(Request $request): JsonResponse
     {
-        // Get teams that the authenticated user is a member of
-        $teams = $request->user()->teams()->get();
+        $teams = $request->user()->teams()
+            ->where('status', '!=', TeamStatus::DELETED->value)
+            ->get();
 
         return $this->success(TeamResource::collection($teams));
     }
 
-    public function show(string $id): JsonResponse
+    public function show(string $teamId): JsonResponse
     {
-        $team = Team::where('public_id', $id)
-            ->orWhere('id', $id)
+        $team = Team::where('public_id', $teamId)
+            ->orWhere('id', $teamId)
             ->firstOrFail();
 
-        // Authorization check - user must be a member of the team
         if (! auth()->user()->teams->contains($team)) {
             return $this->forbidden('You do not have access to this team');
         }
@@ -47,23 +47,22 @@ class TeamController extends ApiController
             'label' => $request->input('name'),
             'description' => $request->input('description'),
             'status' => $statusValue,
+            'owner_id' => $request->user()->id,
         ]);
 
-        // Attach the authenticated user to the team
-        $team->users()->attach($request->user()->id);
+        $team->users()->attach($request->user()->id, ['is_admin' => true]);
 
         return $this->created(new TeamResource($team), 'Team created successfully');
     }
 
-    public function update(UpdateTeamRequest $request, string $id): JsonResponse
+    public function update(UpdateTeamRequest $request, string $teamId): JsonResponse
     {
-        $team = Team::where('public_id', $id)
-            ->orWhere('id', $id)
+        $team = Team::where('public_id', $teamId)
+            ->orWhere('id', $teamId)
             ->firstOrFail();
 
-        // Authorization check - user must be a member of the team
-        if (! auth()->user()->teams->contains($team)) {
-            return $this->forbidden('You do not have access to this team');
+        if (! $team->isAdmin(auth()->user())) {
+            return $this->forbidden('Only team admins can update team settings');
         }
 
         $data = [];
@@ -89,5 +88,32 @@ class TeamController extends ApiController
         }
 
         return $this->success(new TeamResource($team->fresh()), 'Team updated successfully');
+    }
+
+    public function destroy(string $teamId): JsonResponse
+    {
+        $team = Team::where('public_id', $teamId)
+            ->orWhere('id', $teamId)
+            ->firstOrFail();
+
+        if (! $team->isAdmin(auth()->user())) {
+            return $this->forbidden('Only team admins can delete a team');
+        }
+
+        if ($team->is_personal) {
+            return $this->error('Your default team cannot be deleted.', 422);
+        }
+
+        if (auth()->user()->currentTeam()?->id === $team->id) {
+            return $this->error('You cannot delete your current active team. Switch to another team first.', 422);
+        }
+
+        // Delete associated projects and detach members
+        $team->projects()->each(fn ($project) => $project->delete());
+        $team->users()->detach();
+
+        $team->update(['status' => TeamStatus::DELETED->value]);
+
+        return $this->success(null, 'Team deleted successfully');
     }
 }
