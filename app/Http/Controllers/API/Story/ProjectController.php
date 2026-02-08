@@ -57,7 +57,7 @@ class ProjectController extends ApiController
             ->firstOrFail();
 
         // Authorization check
-        if ($project->user_id !== auth()->id() && ! auth()->user()->hasRole(['admin', 'super-admin'])) {
+        if ($project->user_id !== auth()->id()) {
             return $this->forbidden('You do not have access to this project');
         }
 
@@ -89,7 +89,7 @@ class ProjectController extends ApiController
         $project = Project::where('public_id', $id)->firstOrFail();
 
         // Authorization check
-        if ($project->user_id !== auth()->id() && ! auth()->user()->hasRole(['admin', 'super-admin'])) {
+        if ($project->user_id !== auth()->id()) {
             return $this->forbidden('You do not have access to this project');
         }
 
@@ -126,7 +126,7 @@ class ProjectController extends ApiController
         $project = Project::where('public_id', $id)->firstOrFail();
 
         // Authorization check
-        if ($project->user_id !== auth()->id() && ! auth()->user()->hasRole(['admin', 'super-admin'])) {
+        if ($project->user_id !== auth()->id()) {
             return $this->forbidden('You do not have access to this project');
         }
 

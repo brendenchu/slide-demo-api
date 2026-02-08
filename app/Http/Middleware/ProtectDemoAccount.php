@@ -30,16 +30,6 @@ class ProtectDemoAccount
             }
         }
 
-        // Protect admin actions on demo accounts (update, delete)
-        if (in_array($routeName, ['api.v1.admin.users.update', 'api.v1.admin.users.destroy'])) {
-            $targetId = $request->route('id');
-            $targetUser = \App\Models\User::find($targetId);
-
-            if ($targetUser && $this->isDemoAccount($targetUser->email)) {
-                return $this->denyResponse();
-            }
-        }
-
         return $next($request);
     }
 
@@ -49,13 +39,7 @@ class ProtectDemoAccount
             return false;
         }
 
-        return in_array($email, [
-            config('demo.super_admin_email'),
-            config('demo.admin_email'),
-            config('demo.consultant_email'),
-            config('demo.client_email'),
-            config('demo.guest_email'),
-        ]);
+        return $email === config('demo.demo_user_email');
     }
 
     private function denyResponse(): Response

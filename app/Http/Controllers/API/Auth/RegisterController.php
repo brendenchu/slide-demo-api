@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\API\Auth;
 
-use App\Enums\Role;
 use App\Http\Controllers\API\ApiController;
 use App\Http\Requests\API\Auth\RegisterRequest;
 use App\Http\Resources\UserResource;
@@ -15,7 +14,7 @@ class RegisterController extends ApiController
     /**
      * User Registration
      *
-     * Register a new user account and return an API token. New users are automatically assigned the 'client' role.
+     * Register a new user account and return an API token.
      *
      * @unauthenticated
      *
@@ -25,9 +24,7 @@ class RegisterController extends ApiController
      *     "user": {
      *       "id": "1",
      *       "name": "New User",
-     *       "email": "newuser@example.com",
-     *       "roles": ["client"],
-     *       "permissions": ["view-project", "create-project", "update-project"]
+     *       "email": "newuser@example.com"
      *     },
      *     "token": "1|AbCdEf..."
      *   },
@@ -50,16 +47,13 @@ class RegisterController extends ApiController
             'password' => Hash::make($request->input('password')),
         ]);
 
-        // Assign default role (client)
-        $user->assignRole(Role::Client->value);
-
         // Create profile if needed
         if (! $user->profile) {
             $user->profile()->create([]);
         }
 
         // Load relationships for the resource
-        $user->load(['profile', 'roles', 'permissions']);
+        $user->load(['profile']);
 
         // Create API access token
         $token = $user->createToken('api-client')->plainTextToken;

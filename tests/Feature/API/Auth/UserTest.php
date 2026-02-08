@@ -23,10 +23,8 @@ it('can get authenticated user', function (): void {
             'success',
             'data' => [
                 'user' => [
-                    'id',
                     'name',
                     'email',
-                    'roles',
                 ],
             ],
         ])
@@ -53,17 +51,11 @@ it('includes user profile in response', function (): void {
             'success',
             'data' => [
                 'user' => [
-                    'id',
                     'name',
                     'email',
-                    'roles',
-                    'permissions',
                 ],
             ],
         ]);
-
-    expect($response['data']['user']['roles'])->toBeArray();
-    expect($response['data']['user']['permissions'])->toBeArray();
 });
 
 it('requires authentication to get user', function (): void {

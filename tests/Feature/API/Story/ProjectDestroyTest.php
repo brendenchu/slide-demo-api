@@ -1,20 +1,12 @@
 <?php
 
-use App\Enums\Role;
 use App\Models\Story\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
-use Spatie\Permission\Models\Role as SpatieRole;
 use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
-
-beforeEach(function (): void {
-    foreach (Role::cases() as $role) {
-        SpatieRole::firstOrCreate(['name' => $role->value, 'guard_name' => 'web']);
-    }
-});
 
 it('can delete own project', function (): void {
     $user = User::factory()->create();
@@ -55,40 +47,6 @@ it('cannot delete another users project', function (): void {
         ]);
 
     $this->assertDatabaseHas('projects', [
-        'id' => $project->id,
-    ]);
-});
-
-it('admin can delete any project', function (): void {
-    $admin = User::factory()->create();
-    $admin->assignRole(Role::Admin->value);
-    $otherUser = User::factory()->create();
-    $project = Project::factory()->create(['user_id' => $otherUser->id]);
-
-    Sanctum::actingAs($admin);
-
-    $response = $this->deleteJson('/api/v1/projects/' . $project->public_id);
-
-    $response->assertNoContent();
-
-    $this->assertDatabaseMissing('projects', [
-        'id' => $project->id,
-    ]);
-});
-
-it('super admin can delete any project', function (): void {
-    $superAdmin = User::factory()->create();
-    $superAdmin->assignRole(Role::SuperAdmin->value);
-    $otherUser = User::factory()->create();
-    $project = Project::factory()->create(['user_id' => $otherUser->id]);
-
-    Sanctum::actingAs($superAdmin);
-
-    $response = $this->deleteJson('/api/v1/projects/' . $project->public_id);
-
-    $response->assertNoContent();
-
-    $this->assertDatabaseMissing('projects', [
         'id' => $project->id,
     ]);
 });

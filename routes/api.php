@@ -68,17 +68,6 @@ Route::prefix('v1')->group(function (): void {
         // User search (for team invitations)
         Route::get('/users/search', UserSearchController::class)->name('api.v1.users.search');
 
-        // Admin routes (require permission)
-        Route::prefix('admin')->group(function (): void {
-            Route::prefix('users')->group(function (): void {
-                Route::get('/', [\App\Http\Controllers\API\Admin\UserController::class, 'index'])->name('api.v1.admin.users.index');
-                Route::post('/', [\App\Http\Controllers\API\Admin\UserController::class, 'store'])->name('api.v1.admin.users.store');
-                Route::get('/{id}', [\App\Http\Controllers\API\Admin\UserController::class, 'show'])->name('api.v1.admin.users.show');
-                Route::put('/{id}', [\App\Http\Controllers\API\Admin\UserController::class, 'update'])->name('api.v1.admin.users.update');
-                Route::delete('/{id}', [\App\Http\Controllers\API\Admin\UserController::class, 'destroy'])->name('api.v1.admin.users.destroy');
-            });
-        });
-
         // Teams routes
         Route::prefix('teams')->group(function (): void {
             Route::get('/', [TeamController::class, 'index'])->name('api.v1.teams.index');

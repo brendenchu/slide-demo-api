@@ -30,7 +30,7 @@ class DemoModeLimit
         $routeName = $request->route()?->getName();
 
         $check = match ($routeName) {
-            'api.v1.auth.register', 'api.v1.admin.users.store' => $this->checkUserLimit(),
+            'api.v1.auth.register' => $this->checkUserLimit(),
             'api.v1.teams.store' => $this->checkTeamLimit($request),
             'api.v1.projects.store' => $this->checkProjectLimit($request),
             'api.v1.teams.invitations.store' => $this->checkInvitationLimit($request),

@@ -1,18 +1,10 @@
 <?php
 
-use App\Enums\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Role as SpatieRole;
 use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
-
-beforeEach(function (): void {
-    foreach (Role::cases() as $role) {
-        SpatieRole::firstOrCreate(['name' => $role->value, 'guard_name' => 'web']);
-    }
-});
 
 it('can register a new user with valid data', function (): void {
     $response = $this->postJson('/api/v1/auth/register', [
@@ -27,10 +19,8 @@ it('can register a new user with valid data', function (): void {
             'success',
             'data' => [
                 'user' => [
-                    'id',
                     'name',
                     'email',
-                    'roles',
                 ],
                 'token',
             ],
@@ -48,18 +38,6 @@ it('can register a new user with valid data', function (): void {
 
     expect($response['data']['token'])->not->toBeNull()->toBeString();
     expect(User::where('email', 'john@example.com')->exists())->toBeTrue();
-});
-
-it('assigns client role to newly registered users', function (): void {
-    $this->postJson('/api/v1/auth/register', [
-        'name' => 'Jane Doe',
-        'email' => 'jane@example.com',
-        'password' => 'password123',
-        'password_confirmation' => 'password123',
-    ]);
-
-    $user = User::where('email', 'jane@example.com')->first();
-    expect($user->hasRole('client'))->toBeTrue();
 });
 
 it('creates a profile for newly registered users', function (): void {

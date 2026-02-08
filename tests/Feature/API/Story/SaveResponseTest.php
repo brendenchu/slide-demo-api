@@ -1,21 +1,13 @@
 <?php
 
-use App\Enums\Role;
 use App\Enums\Story\ProjectStatus;
 use App\Models\Story\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
-use Spatie\Permission\Models\Role as SpatieRole;
 use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
-
-beforeEach(function (): void {
-    foreach (Role::cases() as $role) {
-        SpatieRole::firstOrCreate(['name' => $role->value, 'guard_name' => 'web']);
-    }
-});
 
 it('can save responses to project', function (): void {
     $user = User::factory()->create();

@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\Role;
 use App\Models\Account\Team;
 use App\Models\Account\TeamInvitation;
 use App\Models\Story\Project;
@@ -8,17 +7,12 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Laravel\Sanctum\Sanctum;
-use Spatie\Permission\Models\Role as SpatieRole;
 use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
 
 beforeEach(function (): void {
     config()->set('demo.enabled', true);
-
-    foreach (Role::cases() as $role) {
-        SpatieRole::firstOrCreate(['name' => $role->value, 'guard_name' => 'web']);
-    }
 });
 
 // --- Registration Limits ---
@@ -69,32 +63,6 @@ it('allows registration when demo mode is off', function (): void {
     ]);
 
     $response->assertCreated();
-});
-
-// --- Admin User Creation Limits ---
-
-it('blocks admin user creation when user limit is reached', function (): void {
-    config()->set('demo.limits.max_users', 2);
-
-    $admin = User::factory()->create();
-    $admin->assignRole(Role::SuperAdmin->value);
-    Sanctum::actingAs($admin);
-
-    // admin + 1 more = 2 total
-    User::factory()->create();
-
-    $response = $this->postJson('/api/v1/admin/users', [
-        'name' => 'New Admin User',
-        'email' => 'newadmin@example.com',
-        'password' => 'password123',
-        'role' => 'client',
-    ]);
-
-    $response->assertForbidden()
-        ->assertJson([
-            'success' => false,
-            'message' => 'Demo limit reached: maximum of 2 user accounts.',
-        ]);
 });
 
 // --- Team Creation Limits ---

@@ -1,21 +1,13 @@
 <?php
 
-use App\Enums\Role;
 use App\Enums\Story\ProjectStatus;
 use App\Models\Story\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
-use Spatie\Permission\Models\Role as SpatieRole;
 use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
-
-beforeEach(function (): void {
-    foreach (Role::cases() as $role) {
-        SpatieRole::firstOrCreate(['name' => $role->value, 'guard_name' => 'web']);
-    }
-});
 
 it('can update own project', function (): void {
     $user = User::factory()->create();
@@ -71,46 +63,6 @@ it('cannot update another users project', function (): void {
         ->assertJson([
             'success' => false,
             'message' => 'You do not have access to this project',
-        ]);
-});
-
-it('admin can update any project', function (): void {
-    $admin = User::factory()->create();
-    $admin->assignRole(Role::Admin->value);
-    $otherUser = User::factory()->create();
-    $project = Project::factory()->create(['user_id' => $otherUser->id]);
-
-    Sanctum::actingAs($admin);
-
-    $response = $this->putJson('/api/v1/projects/' . $project->public_id, [
-        'title' => 'Admin Updated',
-    ]);
-
-    $response->assertSuccessful()
-        ->assertJson([
-            'data' => [
-                'title' => 'Admin Updated',
-            ],
-        ]);
-});
-
-it('super admin can update any project', function (): void {
-    $superAdmin = User::factory()->create();
-    $superAdmin->assignRole(Role::SuperAdmin->value);
-    $otherUser = User::factory()->create();
-    $project = Project::factory()->create(['user_id' => $otherUser->id]);
-
-    Sanctum::actingAs($superAdmin);
-
-    $response = $this->putJson('/api/v1/projects/' . $project->public_id, [
-        'title' => 'Super Admin Updated',
-    ]);
-
-    $response->assertSuccessful()
-        ->assertJson([
-            'data' => [
-                'title' => 'Super Admin Updated',
-            ],
         ]);
 });
 
