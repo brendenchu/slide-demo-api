@@ -20,6 +20,8 @@ it('allows admin to invite a member', function (): void {
     $team = Team::factory()->create();
     $team->users()->attach($admin->id, ['is_admin' => true]);
 
+    $invitee = User::factory()->create(['email' => 'new@example.com']);
+
     $response = $this->postJson("/api/v1/teams/{$team->public_id}/invitations", [
         'email' => 'new@example.com',
         'role' => 'member',
@@ -99,6 +101,8 @@ it('prevents duplicate invitations', function (): void {
 
     $team = Team::factory()->create();
     $team->users()->attach($admin->id, ['is_admin' => true]);
+
+    User::factory()->create(['email' => 'duplicate@example.com']);
 
     TeamInvitation::factory()->create([
         'team_id' => $team->id,
@@ -217,6 +221,24 @@ it('validates role must be admin or member', function (): void {
 
     $response->assertStatus(422)
         ->assertJsonValidationErrors(['role']);
+});
+
+it('rejects non-registered email address', function (): void {
+    Notification::fake();
+
+    $admin = User::factory()->create();
+    Sanctum::actingAs($admin);
+
+    $team = Team::factory()->create();
+    $team->users()->attach($admin->id, ['is_admin' => true]);
+
+    $response = $this->postJson("/api/v1/teams/{$team->public_id}/invitations", [
+        'email' => 'nonexistent@example.com',
+        'role' => 'member',
+    ]);
+
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['email']);
 });
 
 it('denies access to unauthenticated users', function (): void {

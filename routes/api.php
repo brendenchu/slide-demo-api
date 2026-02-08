@@ -17,6 +17,7 @@ use App\Http\Controllers\API\Team\TeamInvitationController;
 use App\Http\Controllers\API\Team\TeamMemberController;
 use App\Http\Controllers\API\Team\TransferTeamOwnershipController;
 use App\Http\Controllers\API\Team\UserInvitationController;
+use App\Http\Controllers\API\Team\UserSearchController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -63,6 +64,9 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/{id}/responses', SaveResponseController::class)->name('api.v1.projects.save-responses');
             Route::post('/{id}/complete', CompleteProjectController::class)->name('api.v1.projects.complete');
         });
+
+        // User search (for team invitations)
+        Route::get('/users/search', UserSearchController::class)->name('api.v1.users.search');
 
         // Admin routes (require permission)
         Route::prefix('admin')->group(function (): void {

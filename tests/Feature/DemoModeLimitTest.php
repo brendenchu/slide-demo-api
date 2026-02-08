@@ -227,6 +227,8 @@ it('allows invitation creation when under invitation limit', function (): void {
     $team = Team::factory()->ownedBy($admin)->create();
     $team->users()->attach($admin->id, ['is_admin' => true]);
 
+    User::factory()->create(['email' => 'new@example.com']);
+
     $response = $this->postJson("/api/v1/teams/{$team->public_id}/invitations", [
         'email' => 'new@example.com',
         'role' => 'member',

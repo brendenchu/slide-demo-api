@@ -24,11 +24,22 @@ class TeamController extends ApiController
 
     public function show(string $teamId): JsonResponse
     {
-        $team = Team::where('public_id', $teamId)
+        $teamExists = Team::where('public_id', $teamId)
             ->orWhere('id', $teamId)
-            ->firstOrFail();
+            ->exists();
 
-        if (! auth()->user()->teams->contains($team)) {
+        if (! $teamExists) {
+            return $this->notFound('Team not found');
+        }
+
+        $team = auth()->user()->teams()
+            ->where(function ($query) use ($teamId): void {
+                $query->where('teams.public_id', $teamId)
+                    ->orWhere('teams.id', $teamId);
+            })
+            ->first();
+
+        if (! $team) {
             return $this->forbidden('You do not have access to this team');
         }
 

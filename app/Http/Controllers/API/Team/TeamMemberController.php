@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API\Team;
 
+use App\Enums\Account\TeamRole;
 use App\Http\Controllers\API\ApiController;
 use App\Http\Requests\API\Team\UpdateTeamMemberRequest;
 use App\Http\Resources\API\Account\TeamMemberResource;
@@ -19,6 +20,8 @@ class TeamMemberController extends ApiController
         }
 
         $members = $team->users()->get();
+
+        TeamMemberResource::$teamOwnerId = $team->owner_id ? (int) $team->owner_id : null;
 
         return $this->success(TeamMemberResource::collection($members));
     }
@@ -69,7 +72,7 @@ class TeamMemberController extends ApiController
         }
 
         $team->users()->updateExistingPivot($userId, [
-            'is_admin' => $request->input('role') === 'admin',
+            'is_admin' => $request->input('role') === TeamRole::Admin->value,
         ]);
 
         return $this->success(null, 'Member role updated successfully');

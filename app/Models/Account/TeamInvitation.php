@@ -3,6 +3,7 @@
 namespace App\Models\Account;
 
 use App\Enums\Account\InvitationStatus;
+use App\Enums\Account\TeamRole;
 use App\Models\User;
 use App\Traits\HasPublicId;
 use Database\Factories\Account\TeamInvitationFactory;
@@ -119,7 +120,7 @@ class TeamInvitation extends Model
         ]);
 
         $this->team->users()->attach($user->id, [
-            'is_admin' => $this->role === 'admin',
+            'is_admin' => $this->role === TeamRole::Admin->value,
         ]);
     }
 }
