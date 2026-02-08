@@ -47,7 +47,7 @@ class LoginController extends ApiController
         $user = Auth::user();
 
         // Load relationships for the resource
-        $user->load(['profile', 'roles', 'permissions']);
+        $user->load(['profile', 'teams', 'roles', 'permissions']);
 
         // Create API access token
         $token = $user->createToken('api-client')->plainTextToken;
