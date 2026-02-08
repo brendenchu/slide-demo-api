@@ -7,6 +7,7 @@ use App\Http\Controllers\API\Auth\RegisterController;
 use App\Http\Controllers\API\Auth\UserController;
 use App\Http\Controllers\API\DemoStatusController;
 use App\Http\Controllers\API\GetCurrentTeamController;
+use App\Http\Controllers\API\SafeNamesController;
 use App\Http\Controllers\API\SetCurrentTeamController;
 use App\Http\Controllers\API\Story\CompleteProjectController;
 use App\Http\Controllers\API\Story\ProjectController;
@@ -33,8 +34,9 @@ use Illuminate\Support\Facades\Route;
 // API v1 Routes
 Route::prefix('v1')->group(function (): void {
 
-    // Public demo status endpoint
+    // Public endpoints
     Route::get('demo/status', DemoStatusController::class)->name('api.v1.demo.status');
+    Route::get('names', SafeNamesController::class)->name('api.v1.names');
 
     // Public authentication routes with strict rate limiting (5 attempts per minute)
     Route::prefix('auth')->middleware(['throttle:5,1', 'demo_limit'])->group(function (): void {

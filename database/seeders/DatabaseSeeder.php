@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Enums\Account\TeamRole;
 use App\Models\User;
+use App\Support\SafeNames;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
@@ -57,13 +58,20 @@ class DatabaseSeeder extends Seeder
     }
 
     /**
-     * Create 10 dummy users with full profile details.
+     * Create 10 dummy users with full profile details using safe names.
      */
     private function createDummyUsers(): void
     {
-        $users = User::factory()->count(10)->create();
+        for ($i = 0; $i < 10; $i++) {
+            $first = fake()->randomElement(SafeNames::FIRST_NAMES);
+            $last = fake()->randomElement(SafeNames::LAST_NAMES);
+            $suffix = Str::lower(Str::random(4));
 
-        foreach ($users as $user) {
+            $user = User::factory()->create([
+                'name' => "$first $last",
+                'email' => Str::lower($first) . '.' . Str::lower($last) . '.' . $suffix . '@example.com',
+            ]);
+
             $this->fillProfile($user);
         }
     }
@@ -73,7 +81,11 @@ class DatabaseSeeder extends Seeder
      */
     private function fillProfile(User $user): void
     {
+        [$first, $last] = explode(' ', $user->name, 2);
+
         $user->profile->update([
+            'first_name' => $first,
+            'last_name' => $last ?? '',
             'phone' => fake()->phoneNumber(),
             'address' => fake()->streetAddress(),
             'city' => fake()->city(),

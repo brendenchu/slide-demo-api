@@ -4,6 +4,7 @@ use App\Models\Account\Team;
 use App\Models\Account\TeamInvitation;
 use App\Models\Story\Project;
 use App\Models\User;
+use App\Support\SafeNames;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Laravel\Sanctum\Sanctum;
@@ -23,10 +24,8 @@ it('blocks registration when user limit is reached', function (): void {
     User::factory()->count(2)->create();
 
     $response = $this->postJson('/api/v1/auth/register', [
-        'name' => 'New User',
-        'email' => 'new@example.com',
-        'password' => 'password123',
-        'password_confirmation' => 'password123',
+        'first_name' => SafeNames::FIRST_NAMES[0],
+        'last_name' => SafeNames::LAST_NAMES[0],
     ]);
 
     $response->assertForbidden()
@@ -40,10 +39,8 @@ it('allows registration when under user limit', function (): void {
     config()->set('demo.limits.max_users', 5);
 
     $response = $this->postJson('/api/v1/auth/register', [
-        'name' => 'New User',
-        'email' => 'new@example.com',
-        'password' => 'password123',
-        'password_confirmation' => 'password123',
+        'first_name' => SafeNames::FIRST_NAMES[0],
+        'last_name' => SafeNames::LAST_NAMES[0],
     ]);
 
     $response->assertCreated();
@@ -56,10 +53,8 @@ it('allows registration when demo mode is off', function (): void {
     User::factory()->create();
 
     $response = $this->postJson('/api/v1/auth/register', [
-        'name' => 'New User',
-        'email' => 'new@example.com',
-        'password' => 'password123',
-        'password_confirmation' => 'password123',
+        'first_name' => SafeNames::FIRST_NAMES[0],
+        'last_name' => SafeNames::LAST_NAMES[0],
     ]);
 
     $response->assertCreated();

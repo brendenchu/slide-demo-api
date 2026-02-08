@@ -2,9 +2,10 @@
 
 namespace App\Http\Requests\API\Auth;
 
+use App\Support\SafeNames;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\Rule;
 
 class RegisterRequest extends FormRequest
 {
@@ -24,9 +25,8 @@ class RegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'confirmed', Password::min(8)],
+            'first_name' => ['required', 'string', Rule::in(SafeNames::FIRST_NAMES)],
+            'last_name' => ['required', 'string', Rule::in(SafeNames::LAST_NAMES)],
         ];
     }
 
@@ -36,13 +36,10 @@ class RegisterRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'Name is required',
-            'email.required' => 'Email address is required',
-            'email.email' => 'Please provide a valid email address',
-            'email.unique' => 'This email address is already registered',
-            'password.required' => 'Password is required',
-            'password.confirmed' => 'Password confirmation does not match',
-            'password.min' => 'Password must be at least 8 characters',
+            'first_name.required' => 'First name is required',
+            'first_name.in' => 'Please select a valid first name from the list',
+            'last_name.required' => 'Last name is required',
+            'last_name.in' => 'Please select a valid last name from the list',
         ];
     }
 }

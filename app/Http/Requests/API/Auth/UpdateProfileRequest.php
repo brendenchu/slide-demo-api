@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\API\Auth;
 
+use App\Support\SafeNames;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -24,8 +25,8 @@ class UpdateProfileRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'first_name' => ['sometimes', 'string', 'max:255'],
-            'last_name' => ['sometimes', 'string', 'max:255'],
+            'first_name' => ['sometimes', 'string', Rule::in(SafeNames::FIRST_NAMES)],
+            'last_name' => ['sometimes', 'string', Rule::in(SafeNames::LAST_NAMES)],
             'email' => [
                 'sometimes',
                 'string',
@@ -43,9 +44,9 @@ class UpdateProfileRequest extends FormRequest
     {
         return [
             'first_name.string' => 'First name must be a string',
-            'first_name.max' => 'First name cannot exceed 255 characters',
+            'first_name.in' => 'Please select a valid first name from the list',
             'last_name.string' => 'Last name must be a string',
-            'last_name.max' => 'Last name cannot exceed 255 characters',
+            'last_name.in' => 'Please select a valid last name from the list',
             'email.email' => 'Please provide a valid email address',
             'email.unique' => 'This email address is already in use',
         ];

@@ -8,6 +8,7 @@ use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class RegisterController extends ApiController
 {
@@ -40,16 +41,26 @@ class RegisterController extends ApiController
      */
     public function __invoke(RegisterRequest $request): JsonResponse
     {
+        $firstName = $request->input('first_name');
+        $lastName = $request->input('last_name');
+
+        // Generate unique email from names
+        $suffix = Str::lower(Str::random(4));
+        $email = Str::lower($firstName) . '.' . Str::lower($lastName) . '.' . $suffix . '@example.com';
+
         // Create user
         $user = User::create([
-            'name' => $request->input('name'),
-            'email' => $request->input('email'),
-            'password' => Hash::make($request->input('password')),
+            'name' => "$firstName $lastName",
+            'email' => $email,
+            'password' => Hash::make('password123'),
         ]);
 
-        // Create profile if needed
+        // Create profile with names
         if (! $user->profile) {
-            $user->profile()->create([]);
+            $user->profile()->create([
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+            ]);
         }
 
         // Load relationships for the resource
