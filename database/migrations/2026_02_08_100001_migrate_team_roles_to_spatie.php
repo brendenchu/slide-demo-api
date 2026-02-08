@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\Account\TeamRole;
+use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
@@ -41,7 +42,7 @@ return new class extends Migration
                 DB::table('model_has_roles')->insert([
                     'team_id' => $team->id,
                     'role_id' => $spatieRole->id,
-                    'model_type' => 'App\\Models\\User',
+                    'model_type' => User::class,
                     'model_id' => $member->user_id,
                 ]);
             }

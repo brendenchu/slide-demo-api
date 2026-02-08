@@ -108,8 +108,8 @@ class TeamController extends ApiController
             ->orWhere('id', $teamId)
             ->firstOrFail();
 
-        if (! $team->isAdmin(auth()->user())) {
-            return $this->forbidden('Only team admins can delete a team');
+        if (! $team->isOwner(auth()->user())) {
+            return $this->forbidden('Only the team owner can delete a team');
         }
 
         if ($team->is_personal) {

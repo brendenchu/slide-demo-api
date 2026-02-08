@@ -145,6 +145,49 @@ it('prevents inviting existing members', function (): void {
         ]);
 });
 
+it('denies admin from inviting as admin role', function (): void {
+    $admin = User::factory()->create();
+    Sanctum::actingAs($admin);
+
+    $team = Team::factory()->create();
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
+
+    $invitee = User::factory()->create(['email' => 'new@example.com']);
+
+    $response = $this->postJson("/api/v1/teams/{$team->public_id}/invitations", [
+        'email' => 'new@example.com',
+        'role' => 'admin',
+    ]);
+
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['role']);
+});
+
+it('allows owner to invite as admin role', function (): void {
+    $owner = User::factory()->create();
+    Sanctum::actingAs($owner);
+
+    $team = Team::factory()->withOwner($owner)->create();
+
+    $invitee = User::factory()->create(['email' => 'new@example.com']);
+
+    $response = $this->postJson("/api/v1/teams/{$team->public_id}/invitations", [
+        'email' => 'new@example.com',
+        'role' => 'admin',
+    ]);
+
+    $response->assertCreated()
+        ->assertJson([
+            'success' => true,
+            'data' => [
+                'email' => 'new@example.com',
+                'role' => 'admin',
+                'status' => 'pending',
+            ],
+        ]);
+});
+
 it('denies non-admin from inviting', function (): void {
     $member = User::factory()->create();
     Sanctum::actingAs($member);

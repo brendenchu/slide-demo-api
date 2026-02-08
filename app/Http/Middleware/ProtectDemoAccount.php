@@ -24,10 +24,8 @@ class ProtectDemoAccount
         $routeName = $request->route()?->getName();
 
         // Protect authenticated user's own account (delete, password change)
-        if (in_array($routeName, ['api.v1.auth.destroy', 'api.v1.auth.password'])) {
-            if ($this->isDemoAccount($request->user()?->email)) {
-                return $this->denyResponse();
-            }
+        if (in_array($routeName, ['api.v1.auth.destroy', 'api.v1.auth.password']) && $this->isDemoAccount($request->user()?->email)) {
+            return $this->denyResponse();
         }
 
         return $next($request);
