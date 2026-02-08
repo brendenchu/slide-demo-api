@@ -84,6 +84,7 @@ class Team extends Model
     {
         $previousTeamId = getPermissionsTeamId();
         setPermissionsTeamId($this->id);
+        $user->unsetRelation('roles');
         $result = $user->hasRole(TeamRole::Owner);
         setPermissionsTeamId($previousTeamId);
 
@@ -116,6 +117,7 @@ class Team extends Model
     {
         $previousTeamId = getPermissionsTeamId();
         setPermissionsTeamId($this->id);
+        $user->unsetRelation('roles');
         $result = $user->hasRole([TeamRole::Owner, TeamRole::Admin]);
         setPermissionsTeamId($previousTeamId);
 
@@ -145,6 +147,7 @@ class Team extends Model
     {
         $previousTeamId = getPermissionsTeamId();
         setPermissionsTeamId($this->id);
+        $user->unsetRelation('roles');
 
         $result = null;
         foreach (TeamRole::cases() as $role) {

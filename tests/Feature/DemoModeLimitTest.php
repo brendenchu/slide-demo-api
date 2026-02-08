@@ -6,7 +6,6 @@ use App\Models\Story\Project;
 use App\Models\User;
 use App\Support\SafeNames;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Notification;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -154,7 +153,6 @@ it('allows project creation when under project limit', function (): void {
 // --- Invitation Limits ---
 
 it('blocks invitation creation when invitation limit per team is reached', function (): void {
-    Notification::fake();
     config()->set('demo.limits.max_invitations_per_team', 1);
 
     $admin = User::factory()->create();
@@ -180,7 +178,6 @@ it('blocks invitation creation when invitation limit per team is reached', funct
 });
 
 it('allows invitation creation when under invitation limit', function (): void {
-    Notification::fake();
     config()->set('demo.limits.max_invitations_per_team', 10);
 
     $admin = User::factory()->create();

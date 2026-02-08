@@ -4,17 +4,13 @@ use App\Enums\Account\TeamRole;
 use App\Models\Account\Team;
 use App\Models\Account\TeamInvitation;
 use App\Models\User;
-use App\Notifications\TeamInvitationNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Notification;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
 
 it('allows admin to invite a member', function (): void {
-    Notification::fake();
-
     $admin = User::factory()->create();
     Sanctum::actingAs($admin);
 
@@ -52,9 +48,7 @@ it('allows admin to invite a member', function (): void {
     ]);
 });
 
-it('sends notification to existing user', function (): void {
-    Notification::fake();
-
+it('creates notification for existing user', function (): void {
     $admin = User::factory()->create();
     Sanctum::actingAs($admin);
 
@@ -71,12 +65,14 @@ it('sends notification to existing user', function (): void {
 
     $response->assertCreated();
 
-    Notification::assertSentTo($invitee, TeamInvitationNotification::class);
+    $this->assertDatabaseHas('notifications', [
+        'recipient_id' => $invitee->id,
+        'sender_id' => $admin->id,
+        'type' => 'team_invitation',
+    ]);
 });
 
 it('links invitation to existing user', function (): void {
-    Notification::fake();
-
     $admin = User::factory()->create();
     Sanctum::actingAs($admin);
 
@@ -98,8 +94,6 @@ it('links invitation to existing user', function (): void {
 });
 
 it('prevents duplicate invitations', function (): void {
-    Notification::fake();
-
     $admin = User::factory()->create();
     Sanctum::actingAs($admin);
 
@@ -237,8 +231,6 @@ it('validates role must be admin or member', function (): void {
 });
 
 it('rejects non-registered email address', function (): void {
-    Notification::fake();
-
     $admin = User::factory()->create();
     Sanctum::actingAs($admin);
 

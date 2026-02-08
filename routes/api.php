@@ -2,11 +2,11 @@
 
 use App\Http\Controllers\API\Auth\LoginController;
 use App\Http\Controllers\API\Auth\LogoutController;
-use App\Http\Controllers\API\Auth\PasswordController;
 use App\Http\Controllers\API\Auth\RegisterController;
 use App\Http\Controllers\API\Auth\UserController;
 use App\Http\Controllers\API\DemoStatusController;
 use App\Http\Controllers\API\GetCurrentTeamController;
+use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\SafeNamesController;
 use App\Http\Controllers\API\SetCurrentTeamController;
 use App\Http\Controllers\API\Story\CompleteProjectController;
@@ -53,7 +53,6 @@ Route::prefix('v1')->group(function (): void {
             Route::get('user', [UserController::class, 'show'])->name('api.v1.auth.user');
             Route::put('user', [UserController::class, 'update'])->name('api.v1.auth.update');
             Route::delete('user', [UserController::class, 'destroy'])->name('api.v1.auth.destroy');
-            Route::put('password', [PasswordController::class, 'update'])->name('api.v1.auth.password');
         });
 
         // Projects routes
@@ -92,6 +91,11 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/{teamId}/invitations', [TeamInvitationController::class, 'store'])->name('api.v1.teams.invitations.store');
             Route::delete('/{teamId}/invitations/{invitationId}', [TeamInvitationController::class, 'destroy'])->name('api.v1.teams.invitations.destroy');
         });
+
+        // Notifications
+        Route::get('/notifications', [NotificationController::class, 'index'])->name('api.v1.notifications.index');
+        Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('api.v1.notifications.read-all');
+        Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('api.v1.notifications.read');
 
         // User invitations
         Route::get('/invitations', [UserInvitationController::class, 'index'])->name('api.v1.invitations.index');

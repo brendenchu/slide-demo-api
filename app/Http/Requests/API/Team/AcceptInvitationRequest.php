@@ -22,19 +22,6 @@ class AcceptInvitationRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'token' => ['required', 'string', 'exists:team_invitations,token'],
-        ];
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    public function messages(): array
-    {
-        return [
-            'token.required' => 'An invitation token is required.',
-            'token.exists' => 'This invitation token is invalid.',
-        ];
+        return [];
     }
 }

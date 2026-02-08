@@ -43,38 +43,6 @@ it('allows non-demo account to delete itself', function (): void {
     $this->assertDatabaseMissing('users', ['id' => $user->id]);
 });
 
-// --- Password change protection ---
-
-it('blocks demo account from changing password', function (): void {
-    $user = User::factory()->create(['email' => 'demo@example.com']);
-    Sanctum::actingAs($user);
-
-    $response = $this->putJson('/api/v1/auth/password', [
-        'current_password' => 'password',
-        'password' => 'new-password-123',
-        'password_confirmation' => 'new-password-123',
-    ]);
-
-    $response->assertForbidden()
-        ->assertJson([
-            'success' => false,
-            'message' => 'Demo accounts cannot be modified.',
-        ]);
-});
-
-it('allows non-demo account to change password', function (): void {
-    $user = User::factory()->create(['email' => 'regular@example.com']);
-    Sanctum::actingAs($user);
-
-    $response = $this->putJson('/api/v1/auth/password', [
-        'current_password' => 'password',
-        'password' => 'new-password-123',
-        'password_confirmation' => 'new-password-123',
-    ]);
-
-    $response->assertSuccessful();
-});
-
 // --- Demo mode off ---
 
 it('allows demo account deletion when demo mode is off', function (): void {
