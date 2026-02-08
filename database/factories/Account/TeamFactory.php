@@ -3,6 +3,7 @@
 namespace Database\Factories\Account;
 
 use App\Models\Account\Team;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -34,5 +35,15 @@ class TeamFactory extends Factory
             'phone' => $this->faker->phoneNumber(),
             'website' => $this->faker->url(),
         ];
+    }
+
+    /**
+     * Set the team owner.
+     */
+    public function ownedBy(User $user): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'owner_id' => $user->id,
+        ]);
     }
 }

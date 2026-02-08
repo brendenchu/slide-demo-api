@@ -14,6 +14,7 @@ use App\Http\Controllers\API\Team\AcceptInvitationController;
 use App\Http\Controllers\API\Team\TeamController;
 use App\Http\Controllers\API\Team\TeamInvitationController;
 use App\Http\Controllers\API\Team\TeamMemberController;
+use App\Http\Controllers\API\Team\TransferTeamOwnershipController;
 use App\Http\Controllers\API\Team\UserInvitationController;
 use Illuminate\Support\Facades\Route;
 
@@ -83,6 +84,9 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/{teamId}/members', [TeamMemberController::class, 'index'])->name('api.v1.teams.members.index');
             Route::delete('/{teamId}/members/{userId}', [TeamMemberController::class, 'destroy'])->name('api.v1.teams.members.destroy');
             Route::put('/{teamId}/members/{userId}/role', [TeamMemberController::class, 'updateRole'])->name('api.v1.teams.members.update-role');
+
+            // Transfer ownership
+            Route::post('/{teamId}/transfer-ownership', TransferTeamOwnershipController::class)->name('api.v1.teams.transfer-ownership');
 
             // Team invitations
             Route::get('/{teamId}/invitations', [TeamInvitationController::class, 'index'])->name('api.v1.teams.invitations.index');

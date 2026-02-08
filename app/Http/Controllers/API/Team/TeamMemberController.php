@@ -37,6 +37,10 @@ class TeamMemberController extends ApiController
             return $this->notFound('Member not found');
         }
 
+        if ($team->isOwner($member)) {
+            return $this->error('Transfer ownership before removing the owner', 422);
+        }
+
         if ((int) $userId === auth()->id()) {
             return $this->error('You cannot remove yourself from the team', 422);
         }
@@ -54,6 +58,10 @@ class TeamMemberController extends ApiController
 
         if (! $member) {
             return $this->notFound('Member not found');
+        }
+
+        if ($team->isOwner($member)) {
+            return $this->error('Owner role cannot be changed', 422);
         }
 
         if ((int) $userId === auth()->id()) {

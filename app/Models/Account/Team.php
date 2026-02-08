@@ -11,6 +11,7 @@ use Database\Factories\Account\TeamFactory;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
@@ -32,6 +33,8 @@ class Team extends Model
         'label',
         'description',
         'status',
+        'is_personal',
+        'owner_id',
         'email',
         'phone',
         'website',
@@ -55,6 +58,7 @@ class Team extends Model
     {
         return [
             'status' => TeamStatus::class,
+            'is_personal' => 'boolean',
         ];
     }
 
@@ -72,6 +76,22 @@ class Team extends Model
     public function getSlugAttribute(): string
     {
         return $this->key;
+    }
+
+    /**
+     * The owner of the team.
+     */
+    public function owner(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    /**
+     * Check if a user is the owner of this team.
+     */
+    public function isOwner(User $user): bool
+    {
+        return $this->owner_id !== null && (int) $this->owner_id === (int) $user->id;
     }
 
     /**
@@ -94,9 +114,15 @@ class Team extends Model
 
     /**
      * Check if a user is an admin of this team.
+     *
+     * The owner is implicitly an admin.
      */
     public function isAdmin(User $user): bool
     {
+        if ($this->isOwner($user)) {
+            return true;
+        }
+
         return $this->users()
             ->where('users.id', $user->id)
             ->wherePivot('is_admin', true)

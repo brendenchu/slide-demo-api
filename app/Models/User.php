@@ -81,6 +81,14 @@ class User extends Authenticatable
     }
 
     /**
+     * The teams owned by the user.
+     */
+    public function ownedTeams(): HasMany
+    {
+        return $this->hasMany(Team::class, 'owner_id');
+    }
+
+    /**
      * The team invitations for the user.
      */
     public function teamInvitations(): HasMany
@@ -115,6 +123,8 @@ class User extends Authenticatable
                 'key' => Str::slug($team_name),
                 'label' => $team_name,
                 'status' => TeamStatus::ACTIVE,
+                'is_personal' => true,
+                'owner_id' => $user->id,
             ]);
 
             $user->teams()->attach($team->id, ['is_admin' => true]);

@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\Story\ProjectStatus;
+use App\Models\Account\Team;
 use App\Models\Story\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -200,6 +201,61 @@ it('returns empty array when user has no projects', function (): void {
     Sanctum::actingAs($user);
 
     $response = $this->getJson('/api/v1/projects');
+
+    $response->assertSuccessful()
+        ->assertJsonCount(0, 'data');
+});
+
+it('can filter projects by team', function (): void {
+    $user = User::factory()->create();
+    $teamA = Team::factory()->create();
+    $teamB = Team::factory()->create();
+
+    $projectA = Project::factory()->create(['user_id' => $user->id]);
+    $projectA->teams()->sync([$teamA->id]);
+
+    $projectB = Project::factory()->create(['user_id' => $user->id]);
+    $projectB->teams()->sync([$teamB->id]);
+
+    Sanctum::actingAs($user);
+
+    $response = $this->getJson("/api/v1/projects?team={$teamA->public_id}");
+
+    $response->assertSuccessful()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $projectA->public_id);
+});
+
+it('returns all projects when no team filter is provided', function (): void {
+    $user = User::factory()->create();
+    $teamA = Team::factory()->create();
+    $teamB = Team::factory()->create();
+
+    $projectA = Project::factory()->create(['user_id' => $user->id]);
+    $projectA->teams()->sync([$teamA->id]);
+
+    $projectB = Project::factory()->create(['user_id' => $user->id]);
+    $projectB->teams()->sync([$teamB->id]);
+
+    Sanctum::actingAs($user);
+
+    $response = $this->getJson('/api/v1/projects');
+
+    $response->assertSuccessful()
+        ->assertJsonCount(2, 'data');
+});
+
+it('returns empty results when filtering by team with no matching projects', function (): void {
+    $user = User::factory()->create();
+    $teamA = Team::factory()->create();
+    $teamB = Team::factory()->create();
+
+    $project = Project::factory()->create(['user_id' => $user->id]);
+    $project->teams()->sync([$teamA->id]);
+
+    Sanctum::actingAs($user);
+
+    $response = $this->getJson("/api/v1/projects?team={$teamB->public_id}");
 
     $response->assertSuccessful()
         ->assertJsonCount(0, 'data');

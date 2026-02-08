@@ -20,6 +20,11 @@ class ProjectController extends ApiController
             ->with('user.profile', 'teams')
             ->where('user_id', $request->user()->id);
 
+        // Filter by team if provided (via teams_projects pivot)
+        if ($request->filled('team')) {
+            $query->whereHas('teams', fn ($q) => $q->where('teams.public_id', $request->input('team')));
+        }
+
         // Filter by status if provided
         if ($request->has('status')) {
             $statusValue = match ($request->input('status')) {
@@ -70,7 +75,12 @@ class ProjectController extends ApiController
             'responses' => [],
         ]);
 
-        return $this->created(new ProjectResource($project), 'Project created successfully');
+        $currentTeam = $request->user()->currentTeam();
+        if ($currentTeam) {
+            $project->teams()->attach($currentTeam);
+        }
+
+        return $this->created(new ProjectResource($project->load('teams')), 'Project created successfully');
     }
 
     public function update(UpdateProjectRequest $request, string $id): JsonResponse

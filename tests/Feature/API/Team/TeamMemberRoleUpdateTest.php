@@ -118,6 +118,26 @@ it('validates role must be admin or member', function (): void {
         ->assertJsonValidationErrors(['role']);
 });
 
+it('prevents changing the owner role', function (): void {
+    $owner = User::factory()->create();
+    $admin = User::factory()->create();
+    Sanctum::actingAs($admin);
+
+    $team = Team::factory()->ownedBy($owner)->create();
+    $team->users()->attach($owner->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id, ['is_admin' => true]);
+
+    $response = $this->putJson("/api/v1/teams/{$team->public_id}/members/{$owner->id}/role", [
+        'role' => 'member',
+    ]);
+
+    $response->assertStatus(422)
+        ->assertJson([
+            'success' => false,
+            'message' => 'Owner role cannot be changed',
+        ]);
+});
+
 it('denies access to unauthenticated users', function (): void {
     $team = Team::factory()->create();
 

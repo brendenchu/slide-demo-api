@@ -76,6 +76,26 @@ it('returns 404 when member does not exist', function (): void {
     $response->assertNotFound();
 });
 
+it('prevents removing the team owner', function (): void {
+    $owner = User::factory()->create();
+    $admin = User::factory()->create();
+    Sanctum::actingAs($admin);
+
+    $team = Team::factory()->ownedBy($owner)->create();
+    $team->users()->attach($owner->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id, ['is_admin' => true]);
+
+    $response = $this->deleteJson("/api/v1/teams/{$team->public_id}/members/{$owner->id}");
+
+    $response->assertStatus(422)
+        ->assertJson([
+            'success' => false,
+            'message' => 'Transfer ownership before removing the owner',
+        ]);
+
+    expect($team->users()->where('users.id', $owner->id)->exists())->toBeTrue();
+});
+
 it('denies access to unauthenticated users', function (): void {
     $team = Team::factory()->create();
 

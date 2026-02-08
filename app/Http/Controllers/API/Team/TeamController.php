@@ -45,6 +45,7 @@ class TeamController extends ApiController
             'label' => $request->input('name'),
             'description' => $request->input('description'),
             'status' => $statusValue,
+            'owner_id' => $request->user()->id,
         ]);
 
         $team->users()->attach($request->user()->id, ['is_admin' => true]);
@@ -96,6 +97,17 @@ class TeamController extends ApiController
         if (! $team->isAdmin(auth()->user())) {
             return $this->forbidden('Only team admins can delete a team');
         }
+
+        if ($team->is_personal) {
+            return $this->error('Your default team cannot be deleted.', 422);
+        }
+
+        if (auth()->user()->currentTeam()?->id === $team->id) {
+            return $this->error('You cannot delete your current active team. Switch to another team first.', 422);
+        }
+
+        // Delete associated projects
+        $team->projects()->each(fn ($project) => $project->delete());
 
         $team->update(['status' => TeamStatus::DELETED->value]);
 
