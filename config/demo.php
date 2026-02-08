@@ -1,6 +1,17 @@
 <?php
 
 return [
+    // Demo mode
+    'enabled' => env('DEMO_MODE', false),
+
+    // Resource limits (enforced when demo mode is enabled)
+    'limits' => [
+        'max_users' => (int) env('DEMO_MAX_USERS', 25),
+        'max_teams_per_user' => (int) env('DEMO_MAX_TEAMS_PER_USER', 3),
+        'max_projects_per_team' => (int) env('DEMO_MAX_PROJECTS_PER_TEAM', 5),
+        'max_invitations_per_team' => (int) env('DEMO_MAX_INVITATIONS_PER_TEAM', 5),
+    ],
+
     // Super Admin (also accessible as admin@demo.com for consistency with Vue SPA)
     'super_admin_name' => env('SUPER_ADMIN_NAME', 'Super Admin'),
     'super_admin_email' => env('SUPER_ADMIN_EMAIL', 'admin@demo.com'),

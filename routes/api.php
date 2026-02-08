@@ -5,6 +5,7 @@ use App\Http\Controllers\API\Auth\LogoutController;
 use App\Http\Controllers\API\Auth\PasswordController;
 use App\Http\Controllers\API\Auth\RegisterController;
 use App\Http\Controllers\API\Auth\UserController;
+use App\Http\Controllers\API\DemoStatusController;
 use App\Http\Controllers\API\GetCurrentTeamController;
 use App\Http\Controllers\API\SetCurrentTeamController;
 use App\Http\Controllers\API\Story\CompleteProjectController;
@@ -31,14 +32,17 @@ use Illuminate\Support\Facades\Route;
 // API v1 Routes
 Route::prefix('v1')->group(function (): void {
 
+    // Public demo status endpoint
+    Route::get('demo/status', DemoStatusController::class)->name('api.v1.demo.status');
+
     // Public authentication routes with strict rate limiting (5 attempts per minute)
-    Route::prefix('auth')->middleware('throttle:5,1')->group(function (): void {
+    Route::prefix('auth')->middleware(['throttle:5,1', 'demo_limit'])->group(function (): void {
         Route::post('login', LoginController::class)->name('api.v1.auth.login');
         Route::post('register', RegisterController::class)->name('api.v1.auth.register');
     });
 
     // Protected routes (require authentication) with standard rate limiting (60 per minute)
-    Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function (): void {
+    Route::middleware(['auth:sanctum', 'throttle:60,1', 'demo_limit', 'protect_demo_account'])->group(function (): void {
 
         // Auth user profile routes
         Route::prefix('auth')->group(function (): void {

@@ -17,6 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+
+            // Demo mode middleware
+            'demo_limit' => \App\Http\Middleware\DemoModeLimit::class,
+            'protect_demo_account' => \App\Http\Middleware\ProtectDemoAccount::class,
         ]);
 
         // Configure API CORS and Security Headers
