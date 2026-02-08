@@ -20,7 +20,7 @@ class TeamInvitationResource extends JsonResource
             'role' => $this->role,
             'status' => $this->status->key(),
             'team' => new TeamResource($this->whenLoaded('team')),
-            'invited_by' => $this->when($this->relationLoaded('invitedBy'), fn () => [
+            'invited_by' => $this->when($this->relationLoaded('invitedBy'), fn (): array => [
                 'id' => (string) $this->invitedBy->id,
                 'name' => $this->invitedBy->name,
             ]),

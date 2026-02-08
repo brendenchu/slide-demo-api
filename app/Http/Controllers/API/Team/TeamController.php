@@ -15,7 +15,9 @@ class TeamController extends ApiController
 {
     public function index(Request $request): JsonResponse
     {
-        $teams = $request->user()->teams()->get();
+        $teams = $request->user()->teams()
+            ->where('status', '!=', TeamStatus::DELETED->value)
+            ->get();
 
         return $this->success(TeamResource::collection($teams));
     }
@@ -106,8 +108,9 @@ class TeamController extends ApiController
             return $this->error('You cannot delete your current active team. Switch to another team first.', 422);
         }
 
-        // Delete associated projects
+        // Delete associated projects and detach members
         $team->projects()->each(fn ($project) => $project->delete());
+        $team->users()->detach();
 
         $team->update(['status' => TeamStatus::DELETED->value]);
 
