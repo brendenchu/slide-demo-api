@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\API\Auth\LoginController;
 use App\Http\Controllers\API\Auth\LogoutController;
+use App\Http\Controllers\API\Auth\PasswordController;
 use App\Http\Controllers\API\Auth\RegisterController;
 use App\Http\Controllers\API\Auth\UserController;
 use App\Http\Controllers\API\GetCurrentTeamController;
@@ -39,6 +40,8 @@ Route::prefix('v1')->group(function (): void {
             Route::post('logout', LogoutController::class)->name('api.v1.auth.logout');
             Route::get('user', [UserController::class, 'show'])->name('api.v1.auth.user');
             Route::put('user', [UserController::class, 'update'])->name('api.v1.auth.update');
+            Route::delete('user', [UserController::class, 'destroy'])->name('api.v1.auth.destroy');
+            Route::put('password', [PasswordController::class, 'update'])->name('api.v1.auth.password');
         });
 
         // Projects routes
