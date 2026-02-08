@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Account\TeamRole;
 use App\Models\Account\Team;
 use App\Models\Account\TeamInvitation;
 use App\Models\User;
@@ -14,7 +15,8 @@ it('returns matching users by name', function (): void {
     Sanctum::actingAs($user);
 
     $team = Team::factory()->create();
-    $team->users()->attach($user->id, ['is_admin' => true]);
+    $team->users()->attach($user->id);
+    $team->assignTeamRole($user, TeamRole::Admin);
 
     $matchingUser = User::factory()->create(['name' => 'Zxyqwk Unique', 'email' => 'zxyqwk@example.com']);
     User::factory()->create(['name' => 'Bob Jones', 'email' => 'bob@example.com']);
@@ -37,7 +39,8 @@ it('returns matching users by email', function (): void {
     Sanctum::actingAs($user);
 
     $team = Team::factory()->create();
-    $team->users()->attach($user->id, ['is_admin' => true]);
+    $team->users()->attach($user->id);
+    $team->assignTeamRole($user, TeamRole::Admin);
 
     $matchingUser = User::factory()->create(['email' => 'findme@example.com']);
     User::factory()->create(['email' => 'notme@other.com']);
@@ -59,10 +62,12 @@ it('excludes current team members', function (): void {
     Sanctum::actingAs($user);
 
     $team = Team::factory()->create();
-    $team->users()->attach($user->id, ['is_admin' => true]);
+    $team->users()->attach($user->id);
+    $team->assignTeamRole($user, TeamRole::Admin);
 
     $member = User::factory()->create(['name' => 'Team Member']);
-    $team->users()->attach($member->id, ['is_admin' => false]);
+    $team->users()->attach($member->id);
+    $team->assignTeamRole($member, TeamRole::Member);
 
     $nonMember = User::factory()->create(['name' => 'Team Outsider']);
 
@@ -83,7 +88,8 @@ it('excludes users with pending invitations', function (): void {
     Sanctum::actingAs($user);
 
     $team = Team::factory()->create();
-    $team->users()->attach($user->id, ['is_admin' => true]);
+    $team->users()->attach($user->id);
+    $team->assignTeamRole($user, TeamRole::Admin);
 
     $invitedUser = User::factory()->create(['name' => 'Invited User']);
     TeamInvitation::factory()->create([
@@ -149,7 +155,8 @@ it('returns at most 10 results', function (): void {
     Sanctum::actingAs($user);
 
     $team = Team::factory()->create();
-    $team->users()->attach($user->id, ['is_admin' => true]);
+    $team->users()->attach($user->id);
+    $team->assignTeamRole($user, TeamRole::Admin);
 
     User::factory()->count(15)->create(['name' => 'Searchable User']);
 

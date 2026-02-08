@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Account\TeamRole;
 use App\Models\Account\Team;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -13,10 +14,12 @@ it('lists team members', function (): void {
     Sanctum::actingAs($user);
 
     $team = Team::factory()->create();
-    $team->users()->attach($user->id, ['is_admin' => true]);
+    $team->users()->attach($user->id);
+    $team->assignTeamRole($user, TeamRole::Admin);
 
     $member = User::factory()->create();
-    $team->users()->attach($member->id, ['is_admin' => false]);
+    $team->users()->attach($member->id);
+    $team->assignTeamRole($member, TeamRole::Member);
 
     $response = $this->getJson("/api/v1/teams/{$team->public_id}/members");
 
@@ -35,10 +38,12 @@ it('shows admin flag correctly', function (): void {
     Sanctum::actingAs($admin);
 
     $team = Team::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     $member = User::factory()->create();
-    $team->users()->attach($member->id, ['is_admin' => false]);
+    $team->users()->attach($member->id);
+    $team->assignTeamRole($member, TeamRole::Member);
 
     $response = $this->getJson("/api/v1/teams/{$team->public_id}/members");
 
@@ -58,7 +63,8 @@ it('denies access to non-members', function (): void {
 
     $team = Team::factory()->create();
     $otherUser = User::factory()->create();
-    $team->users()->attach($otherUser->id, ['is_admin' => true]);
+    $team->users()->attach($otherUser->id);
+    $team->assignTeamRole($otherUser, TeamRole::Admin);
 
     $response = $this->getJson("/api/v1/teams/{$team->public_id}/members");
 

@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Account\TeamRole;
 use App\Enums\Account\TeamStatus;
 use App\Models\Account\Team;
 use App\Models\Story\Project;
@@ -13,7 +14,8 @@ uses(TestCase::class, RefreshDatabase::class);
 it('allows team admin to delete a team', function (): void {
     $user = User::factory()->create();
     $team = Team::factory()->create();
-    $team->users()->attach($user->id, ['is_admin' => true]);
+    $team->users()->attach($user->id);
+    $team->assignTeamRole($user, TeamRole::Admin);
 
     Sanctum::actingAs($user);
 
@@ -26,7 +28,8 @@ it('allows team admin to delete a team', function (): void {
 it('denies non-admin members from deleting a team', function (): void {
     $user = User::factory()->create();
     $team = Team::factory()->create();
-    $team->users()->attach($user->id, ['is_admin' => false]);
+    $team->users()->attach($user->id);
+    $team->assignTeamRole($user, TeamRole::Member);
 
     Sanctum::actingAs($user);
 
@@ -46,7 +49,8 @@ it('denies unauthenticated users from deleting a team', function (): void {
 it('prevents deletion of the users current active team', function (): void {
     $user = User::factory()->create();
     $team = Team::factory()->create();
-    $team->users()->attach($user->id, ['is_admin' => true]);
+    $team->users()->attach($user->id);
+    $team->assignTeamRole($user, TeamRole::Admin);
 
     $user->setSetting('current_team', $team->key);
 
@@ -62,7 +66,8 @@ it('prevents deletion of the users current active team', function (): void {
 it('prevents deletion of a personal team', function (): void {
     $user = User::factory()->create();
     $team = Team::factory()->create(['is_personal' => true]);
-    $team->users()->attach($user->id, ['is_admin' => true]);
+    $team->users()->attach($user->id);
+    $team->assignTeamRole($user, TeamRole::Admin);
 
     Sanctum::actingAs($user);
 
@@ -77,8 +82,10 @@ it('allows deletion of a team that is not current or personal', function (): voi
     $user = User::factory()->create();
     $currentTeam = Team::factory()->create();
     $otherTeam = Team::factory()->create();
-    $currentTeam->users()->attach($user->id, ['is_admin' => true]);
-    $otherTeam->users()->attach($user->id, ['is_admin' => true]);
+    $currentTeam->users()->attach($user->id);
+    $currentTeam->assignTeamRole($user, TeamRole::Admin);
+    $otherTeam->users()->attach($user->id);
+    $otherTeam->assignTeamRole($user, TeamRole::Admin);
 
     $user->setSetting('current_team', $currentTeam->key);
 
@@ -93,7 +100,8 @@ it('allows deletion of a team that is not current or personal', function (): voi
 it('deletes associated projects when a team is deleted', function (): void {
     $user = User::factory()->create();
     $team = Team::factory()->create();
-    $team->users()->attach($user->id, ['is_admin' => true]);
+    $team->users()->attach($user->id);
+    $team->assignTeamRole($user, TeamRole::Admin);
 
     $project1 = Project::factory()->create(['user_id' => $user->id]);
     $project1->teams()->sync([$team->id]);

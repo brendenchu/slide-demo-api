@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API\Team;
 
+use App\Enums\Account\TeamRole;
 use App\Enums\Account\TeamStatus;
 use App\Http\Controllers\API\ApiController;
 use App\Http\Requests\API\Team\CreateTeamRequest;
@@ -58,10 +59,10 @@ class TeamController extends ApiController
             'label' => $request->input('name'),
             'description' => $request->input('description'),
             'status' => $statusValue,
-            'owner_id' => $request->user()->id,
         ]);
 
-        $team->users()->attach($request->user()->id, ['is_admin' => true]);
+        $team->users()->attach($request->user()->id);
+        $team->assignTeamRole($request->user(), TeamRole::Owner);
 
         return $this->created(new TeamResource($team), 'Team created successfully');
     }

@@ -3,6 +3,7 @@
 namespace Database\Factories\Account;
 
 use App\Enums\Account\InvitationStatus;
+use App\Enums\Account\TeamRole;
 use App\Models\Account\Team;
 use App\Models\Account\TeamInvitation;
 use App\Models\User;
@@ -29,7 +30,7 @@ class TeamInvitationFactory extends Factory
             'invited_by' => User::factory(),
             'email' => fake()->unique()->safeEmail(),
             'token' => Str::random(64),
-            'role' => 'member',
+            'role' => TeamRole::Member->value,
             'status' => InvitationStatus::Pending,
             'expires_at' => now()->addDays(7),
         ];
@@ -62,7 +63,7 @@ class TeamInvitationFactory extends Factory
     public function asAdmin(): static
     {
         return $this->state(fn (): array => [
-            'role' => 'admin',
+            'role' => TeamRole::Admin->value,
         ]);
     }
 

@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Account\TeamRole;
 use App\Models\Account\Team;
 use App\Models\Account\TeamInvitation;
 use App\Models\User;
@@ -15,7 +16,8 @@ it('lists pending invitations for authenticated user', function (): void {
 
     $team = Team::factory()->create();
     $admin = User::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     TeamInvitation::factory()->count(2)->create([
         'team_id' => $team->id,
@@ -41,7 +43,8 @@ it('does not list invitations for other users', function (): void {
 
     $team = Team::factory()->create();
     $admin = User::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     TeamInvitation::factory()->create([
         'team_id' => $team->id,
@@ -61,7 +64,8 @@ it('does not list accepted invitations', function (): void {
 
     $team = Team::factory()->create();
     $admin = User::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     TeamInvitation::factory()->accepted()->create([
         'team_id' => $team->id,
@@ -81,7 +85,8 @@ it('includes team information', function (): void {
 
     $team = Team::factory()->create(['label' => 'Test Team']);
     $admin = User::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     TeamInvitation::factory()->create([
         'team_id' => $team->id,

@@ -2,6 +2,7 @@
 
 namespace App\Models\Account;
 
+use App\Enums\Account\TeamRole;
 use App\Enums\Account\TeamStatus;
 use App\Models\Story\Project;
 use App\Models\User;
@@ -11,7 +12,6 @@ use Database\Factories\Account\TeamFactory;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
@@ -34,7 +34,6 @@ class Team extends Model
         'description',
         'status',
         'is_personal',
-        'owner_id',
         'email',
         'phone',
         'website',
@@ -79,19 +78,16 @@ class Team extends Model
     }
 
     /**
-     * The owner of the team.
-     */
-    public function owner(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'owner_id');
-    }
-
-    /**
      * Check if a user is the owner of this team.
      */
     public function isOwner(User $user): bool
     {
-        return $this->owner_id !== null && (int) $this->owner_id === (int) $user->id;
+        $previousTeamId = getPermissionsTeamId();
+        setPermissionsTeamId($this->id);
+        $result = $user->hasRole(TeamRole::Owner);
+        setPermissionsTeamId($previousTeamId);
+
+        return $result;
     }
 
     /**
@@ -100,7 +96,6 @@ class Team extends Model
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'users_teams')
-            ->withPivot('is_admin')
             ->withTimestamps();
     }
 
@@ -119,14 +114,49 @@ class Team extends Model
      */
     public function isAdmin(User $user): bool
     {
-        if ($this->isOwner($user)) {
-            return true;
+        $previousTeamId = getPermissionsTeamId();
+        setPermissionsTeamId($this->id);
+        $result = $user->hasRole([TeamRole::Owner, TeamRole::Admin]);
+        setPermissionsTeamId($previousTeamId);
+
+        return $result;
+    }
+
+    /**
+     * Assign a team role to a user, removing any existing team roles first.
+     */
+    public function assignTeamRole(User $user, TeamRole $role): void
+    {
+        $previousTeamId = getPermissionsTeamId();
+        setPermissionsTeamId($this->id);
+
+        $user->removeRole(TeamRole::Owner);
+        $user->removeRole(TeamRole::Admin);
+        $user->removeRole(TeamRole::Member);
+        $user->assignRole($role);
+
+        setPermissionsTeamId($previousTeamId);
+    }
+
+    /**
+     * Get the team role for a user.
+     */
+    public function getUserTeamRole(User $user): ?TeamRole
+    {
+        $previousTeamId = getPermissionsTeamId();
+        setPermissionsTeamId($this->id);
+
+        $result = null;
+        foreach (TeamRole::cases() as $role) {
+            if ($user->hasRole($role)) {
+                $result = $role;
+                break;
+            }
         }
 
-        return $this->users()
-            ->where('users.id', $user->id)
-            ->wherePivot('is_admin', true)
-            ->exists();
+        setPermissionsTeamId($previousTeamId);
+
+        return $result;
     }
 
     /**

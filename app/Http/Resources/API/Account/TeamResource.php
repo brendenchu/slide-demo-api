@@ -24,11 +24,8 @@ class TeamResource extends JsonResource
             'description' => $this->description,
             'status' => $this->mapStatus(),
             'is_personal' => (bool) $this->is_personal,
-            'is_owner' => $this->owner_id !== null && auth()->check() && (int) $this->owner_id === (int) auth()->id(),
-            'is_admin' => $this->when(
-                $this->pivot?->is_admin !== null,
-                fn (): bool => (bool) $this->pivot->is_admin
-            ),
+            'is_owner' => auth()->check() && $this->resource->isOwner(auth()->user()),
+            'is_admin' => auth()->check() && $this->resource->isAdmin(auth()->user()),
             'created_at' => $this->created_at->toISOString(),
             'updated_at' => $this->updated_at->toISOString(),
         ];

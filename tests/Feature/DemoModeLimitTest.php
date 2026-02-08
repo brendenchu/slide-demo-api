@@ -106,7 +106,7 @@ it('blocks team creation when team limit per user is reached', function (): void
     Sanctum::actingAs($user);
 
     // User already has personal team from factory, create one non-personal
-    Team::factory()->ownedBy($user)->create(['is_personal' => false]);
+    Team::factory()->withOwner($user)->create(['is_personal' => false]);
 
     $response = $this->postJson('/api/v1/teams', [
         'name' => 'Another Team',
@@ -197,8 +197,7 @@ it('blocks invitation creation when invitation limit per team is reached', funct
     $admin = User::factory()->create();
     Sanctum::actingAs($admin);
 
-    $team = Team::factory()->ownedBy($admin)->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team = Team::factory()->withOwner($admin)->create();
 
     TeamInvitation::factory()->create([
         'team_id' => $team->id,
@@ -224,8 +223,7 @@ it('allows invitation creation when under invitation limit', function (): void {
     $admin = User::factory()->create();
     Sanctum::actingAs($admin);
 
-    $team = Team::factory()->ownedBy($admin)->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team = Team::factory()->withOwner($admin)->create();
 
     User::factory()->create(['email' => 'new@example.com']);
 

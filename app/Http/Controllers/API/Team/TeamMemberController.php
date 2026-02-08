@@ -21,7 +21,7 @@ class TeamMemberController extends ApiController
 
         $members = $team->users()->get();
 
-        TeamMemberResource::$teamOwnerId = $team->owner_id ? (int) $team->owner_id : null;
+        TeamMemberResource::$team = $team;
 
         return $this->success(TeamMemberResource::collection($members));
     }
@@ -71,9 +71,7 @@ class TeamMemberController extends ApiController
             return $this->error('You cannot change your own role', 422);
         }
 
-        $team->users()->updateExistingPivot($userId, [
-            'is_admin' => $request->input('role') === TeamRole::Admin->value,
-        ]);
+        $team->assignTeamRole($member, TeamRole::from($request->input('role')));
 
         return $this->success(null, 'Member role updated successfully');
     }

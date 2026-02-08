@@ -2,6 +2,7 @@
 
 namespace Database\Factories\Account;
 
+use App\Enums\Account\TeamRole;
 use App\Models\Account\Team;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -38,12 +39,13 @@ class TeamFactory extends Factory
     }
 
     /**
-     * Set the team owner.
+     * Create the team with a specific owner.
      */
-    public function ownedBy(User $user): static
+    public function withOwner(User $user): static
     {
-        return $this->state(fn (array $attributes): array => [
-            'owner_id' => $user->id,
-        ]);
+        return $this->afterCreating(function (Team $team) use ($user): void {
+            $team->users()->attach($user->id);
+            $team->assignTeamRole($user, TeamRole::Owner);
+        });
     }
 }

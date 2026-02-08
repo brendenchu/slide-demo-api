@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\Account\TeamRole;
 use App\Enums\Permission as PermissionEnum;
 use App\Enums\Role as RoleEnum;
 use App\Models\User;
@@ -29,6 +30,11 @@ class DatabaseSeeder extends Seeder
     {
         foreach (RoleEnum::getInstances() as $role) {
             Role::create(['name' => $role]);
+        }
+
+        // Create team role definitions
+        foreach (TeamRole::cases() as $teamRole) {
+            Role::findOrCreate($teamRole->value, 'web');
         }
 
         foreach (PermissionEnum::getInstances() as $permission) {

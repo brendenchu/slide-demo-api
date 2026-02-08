@@ -119,8 +119,9 @@ class TeamInvitation extends Model
             'accepted_at' => now(),
         ]);
 
-        $this->team->users()->attach($user->id, [
-            'is_admin' => $this->role === TeamRole::Admin->value,
-        ]);
+        $this->team->users()->attach($user->id);
+
+        $teamRole = TeamRole::from($this->role);
+        $this->team->assignTeamRole($user, $teamRole);
     }
 }

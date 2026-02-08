@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Account\TeamRole;
 use App\Models\Account\Team;
 use App\Models\Account\TeamInvitation;
 use App\Models\User;
@@ -14,7 +15,8 @@ it('lists pending invitations for admin', function (): void {
     Sanctum::actingAs($admin);
 
     $team = Team::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     TeamInvitation::factory()->count(3)->create([
         'team_id' => $team->id,
@@ -38,7 +40,8 @@ it('only lists pending invitations', function (): void {
     Sanctum::actingAs($admin);
 
     $team = Team::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     TeamInvitation::factory()->count(2)->create([
         'team_id' => $team->id,
@@ -62,8 +65,10 @@ it('denies non-admin from viewing invitations', function (): void {
 
     $team = Team::factory()->create();
     $admin = User::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
-    $team->users()->attach($member->id, ['is_admin' => false]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
+    $team->users()->attach($member->id);
+    $team->assignTeamRole($member, TeamRole::Member);
 
     $response = $this->getJson("/api/v1/teams/{$team->public_id}/invitations");
 

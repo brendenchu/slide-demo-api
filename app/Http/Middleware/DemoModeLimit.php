@@ -63,7 +63,7 @@ class DemoModeLimit
         $max = config('demo.limits.max_teams_per_user');
         $user = $request->user();
 
-        if ($user && $user->ownedTeams()->where('is_personal', false)->count() >= $max) {
+        if ($user && $user->teams()->where('is_personal', false)->count() >= $max) {
             return "Demo limit reached: maximum of {$max} teams per user.";
         }
 

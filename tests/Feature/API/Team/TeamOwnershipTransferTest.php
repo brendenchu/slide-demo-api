@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Account\TeamRole;
 use App\Models\Account\Team;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -12,11 +13,11 @@ it('allows owner to transfer ownership to a member', function (): void {
     $owner = User::factory()->create();
     Sanctum::actingAs($owner);
 
-    $team = Team::factory()->ownedBy($owner)->create();
-    $team->users()->attach($owner->id, ['is_admin' => true]);
+    $team = Team::factory()->withOwner($owner)->create();
 
     $member = User::factory()->create();
-    $team->users()->attach($member->id, ['is_admin' => false]);
+    $team->users()->attach($member->id);
+    $team->assignTeamRole($member, TeamRole::Member);
 
     $response = $this->postJson("/api/v1/teams/{$team->public_id}/transfer-ownership", [
         'user_id' => $member->id,
@@ -28,8 +29,7 @@ it('allows owner to transfer ownership to a member', function (): void {
             'message' => 'Ownership transferred successfully',
         ]);
 
-    $team->refresh();
-    expect($team->owner_id)->toBe($member->id);
+    expect($team->isOwner($member))->toBeTrue();
 });
 
 it('denies non-owner admin from transferring ownership', function (): void {
@@ -37,12 +37,13 @@ it('denies non-owner admin from transferring ownership', function (): void {
     $admin = User::factory()->create();
     Sanctum::actingAs($admin);
 
-    $team = Team::factory()->ownedBy($owner)->create();
-    $team->users()->attach($owner->id, ['is_admin' => true]);
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team = Team::factory()->withOwner($owner)->create();
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     $member = User::factory()->create();
-    $team->users()->attach($member->id, ['is_admin' => false]);
+    $team->users()->attach($member->id);
+    $team->assignTeamRole($member, TeamRole::Member);
 
     $response = $this->postJson("/api/v1/teams/{$team->public_id}/transfer-ownership", [
         'user_id' => $member->id,
@@ -56,12 +57,13 @@ it('denies regular member from transferring ownership', function (): void {
     $member = User::factory()->create();
     Sanctum::actingAs($member);
 
-    $team = Team::factory()->ownedBy($owner)->create();
-    $team->users()->attach($owner->id, ['is_admin' => true]);
-    $team->users()->attach($member->id, ['is_admin' => false]);
+    $team = Team::factory()->withOwner($owner)->create();
+    $team->users()->attach($member->id);
+    $team->assignTeamRole($member, TeamRole::Member);
 
     $anotherMember = User::factory()->create();
-    $team->users()->attach($anotherMember->id, ['is_admin' => false]);
+    $team->users()->attach($anotherMember->id);
+    $team->assignTeamRole($anotherMember, TeamRole::Member);
 
     $response = $this->postJson("/api/v1/teams/{$team->public_id}/transfer-ownership", [
         'user_id' => $anotherMember->id,
@@ -74,8 +76,7 @@ it('rejects transfer to non-member', function (): void {
     $owner = User::factory()->create();
     Sanctum::actingAs($owner);
 
-    $team = Team::factory()->ownedBy($owner)->create();
-    $team->users()->attach($owner->id, ['is_admin' => true]);
+    $team = Team::factory()->withOwner($owner)->create();
 
     $nonMember = User::factory()->create();
 
@@ -90,48 +91,47 @@ it('rejects transfer to non-member', function (): void {
         ]);
 });
 
-it('ensures new owner gets admin privileges on pivot', function (): void {
+it('ensures new owner gets owner role', function (): void {
     $owner = User::factory()->create();
     Sanctum::actingAs($owner);
 
-    $team = Team::factory()->ownedBy($owner)->create();
-    $team->users()->attach($owner->id, ['is_admin' => true]);
+    $team = Team::factory()->withOwner($owner)->create();
 
     $member = User::factory()->create();
-    $team->users()->attach($member->id, ['is_admin' => false]);
+    $team->users()->attach($member->id);
+    $team->assignTeamRole($member, TeamRole::Member);
 
     $this->postJson("/api/v1/teams/{$team->public_id}/transfer-ownership", [
         'user_id' => $member->id,
     ]);
 
-    $pivot = $team->users()->where('users.id', $member->id)->first()->pivot;
-    expect((bool) $pivot->is_admin)->toBeTrue();
+    expect($team->isOwner($member))->toBeTrue();
+    expect($team->isAdmin($member))->toBeTrue();
 });
 
 it('keeps previous owner as admin member', function (): void {
     $owner = User::factory()->create();
     Sanctum::actingAs($owner);
 
-    $team = Team::factory()->ownedBy($owner)->create();
-    $team->users()->attach($owner->id, ['is_admin' => true]);
+    $team = Team::factory()->withOwner($owner)->create();
 
     $member = User::factory()->create();
-    $team->users()->attach($member->id, ['is_admin' => false]);
+    $team->users()->attach($member->id);
+    $team->assignTeamRole($member, TeamRole::Member);
 
     $this->postJson("/api/v1/teams/{$team->public_id}/transfer-ownership", [
         'user_id' => $member->id,
     ]);
 
-    $pivot = $team->users()->where('users.id', $owner->id)->first()->pivot;
-    expect((bool) $pivot->is_admin)->toBeTrue();
+    expect($team->isAdmin($owner))->toBeTrue();
+    expect($team->isOwner($owner))->toBeFalse();
 });
 
 it('validates user_id is required', function (): void {
     $owner = User::factory()->create();
     Sanctum::actingAs($owner);
 
-    $team = Team::factory()->ownedBy($owner)->create();
-    $team->users()->attach($owner->id, ['is_admin' => true]);
+    $team = Team::factory()->withOwner($owner)->create();
 
     $response = $this->postJson("/api/v1/teams/{$team->public_id}/transfer-ownership", []);
 
@@ -143,8 +143,7 @@ it('validates user_id exists', function (): void {
     $owner = User::factory()->create();
     Sanctum::actingAs($owner);
 
-    $team = Team::factory()->ownedBy($owner)->create();
-    $team->users()->attach($owner->id, ['is_admin' => true]);
+    $team = Team::factory()->withOwner($owner)->create();
 
     $response = $this->postJson("/api/v1/teams/{$team->public_id}/transfer-ownership", [
         'user_id' => 99999,

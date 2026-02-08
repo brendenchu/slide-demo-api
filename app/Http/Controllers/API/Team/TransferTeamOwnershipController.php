@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API\Team;
 
+use App\Enums\Account\TeamRole;
 use App\Http\Controllers\API\ApiController;
 use App\Http\Requests\API\Team\TransferTeamOwnershipRequest;
 use App\Models\Account\Team;
@@ -19,10 +20,11 @@ class TransferTeamOwnershipController extends ApiController
             return $this->error('The specified user is not a member of this team', 422);
         }
 
-        $team->update(['owner_id' => $newOwnerId]);
+        $currentOwner = $request->user();
+        $newOwner = $team->users()->where('users.id', $newOwnerId)->first();
 
-        // Ensure the new owner has admin privileges on the pivot
-        $team->users()->updateExistingPivot($newOwnerId, ['is_admin' => true]);
+        $team->assignTeamRole($currentOwner, TeamRole::Admin);
+        $team->assignTeamRole($newOwner, TeamRole::Owner);
 
         return $this->success(null, 'Ownership transferred successfully');
     }

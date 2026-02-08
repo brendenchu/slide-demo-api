@@ -70,7 +70,6 @@ it('sets creator as team owner', function (): void {
     $response->assertCreated();
 
     $team = Team::where('label', 'New Team')->first();
-    expect($team->owner_id)->toBe($user->id);
     expect($team->isOwner($user))->toBeTrue();
 });
 

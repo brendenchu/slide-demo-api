@@ -13,7 +13,7 @@ uses(TestCase::class, RefreshDatabase::class);
 beforeEach(function (): void {
     // Create roles in database for tests
     foreach (Role::cases() as $role) {
-        SpatieRole::create(['name' => $role->value, 'guard_name' => 'web']);
+        SpatieRole::firstOrCreate(['name' => $role->value, 'guard_name' => 'web']);
     }
 });
 
