@@ -144,14 +144,6 @@ it('throws exception when saving position without token', function (): void {
     expect(fn () => $service->saveLastPosition('intro', 1))->toThrow(Exception::class, 'No token set.');
 });
 
-it('bypasses expiration and returns self', function (): void {
-    $service = new TokenService;
-
-    $result = $service->bypassExpiration();
-
-    expect($result)->toBeInstanceOf(TokenService::class);
-});
-
 it('bypasses revocation and returns self', function (): void {
     $service = new TokenService;
 

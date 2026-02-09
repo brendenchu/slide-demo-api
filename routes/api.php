@@ -5,7 +5,6 @@ use App\Http\Controllers\API\Auth\LogoutController;
 use App\Http\Controllers\API\Auth\RegisterController;
 use App\Http\Controllers\API\Auth\UserController;
 use App\Http\Controllers\API\DemoStatusController;
-use App\Http\Controllers\API\GetCurrentTeamController;
 use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\SafeNamesController;
 use App\Http\Controllers\API\SetCurrentTeamController;
@@ -101,13 +100,5 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/invitations', [UserInvitationController::class, 'index'])->name('api.v1.invitations.index');
         Route::post('/invitations/{invitationId}/accept', AcceptInvitationController::class)->name('api.v1.invitations.accept');
         Route::post('/invitations/{invitationId}/decline', [UserInvitationController::class, 'decline'])->name('api.v1.invitations.decline');
-    });
-});
-
-// Legacy team routes (existing)
-Route::middleware('auth:sanctum')->group(function (): void {
-    Route::prefix('team')->group(function (): void {
-        Route::get('current', GetCurrentTeamController::class)->name('api.get-current-team');
-        Route::post('current', SetCurrentTeamController::class)->name('api.set-current-team');
     });
 });
