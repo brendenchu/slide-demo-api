@@ -45,13 +45,15 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($demoUsers as $data) {
-            $user = User::create([
-                'name' => $data['name'],
-                'email' => $data['email'],
-                'password' => bcrypt($data['password']),
-                'email_verified_at' => now(),
-                'remember_token' => Str::random(10),
-            ]);
+            $user = User::updateOrCreate(
+                ['email' => $data['email']],
+                [
+                    'name' => $data['name'],
+                    'password' => bcrypt($data['password']),
+                    'email_verified_at' => now(),
+                    'remember_token' => Str::random(10),
+                ],
+            );
 
             $this->fillProfile($user);
         }
@@ -62,14 +64,20 @@ class DatabaseSeeder extends Seeder
      */
     private function createDummyUsers(): void
     {
-        for ($i = 0; $i < 10; $i++) {
-            $first = fake()->randomElement(SafeNames::FIRST_NAMES);
-            $last = fake()->randomElement(SafeNames::LAST_NAMES);
-            $suffix = fake()->numerify('####');
+        $firstNames = SafeNames::FIRST_NAMES;
+        $lastNames = SafeNames::LAST_NAMES;
 
-            $user = User::factory()->create([
+        for ($i = 0; $i < 10; $i++) {
+            $first = $firstNames[$i % count($firstNames)];
+            $last = $lastNames[$i % count($lastNames)];
+            $suffix = str_pad((string) ($i * 1111), 4, '0', STR_PAD_LEFT);
+
+            $user = User::create([
                 'name' => "$first $last",
                 'email' => Str::lower($first) . '.' . Str::lower($last) . '.' . $suffix . '@example.com',
+                'password' => bcrypt('password'),
+                'email_verified_at' => now(),
+                'remember_token' => Str::random(10),
             ]);
 
             $this->fillProfile($user);
@@ -86,15 +94,15 @@ class DatabaseSeeder extends Seeder
         $user->profile->update([
             'first_name' => $first,
             'last_name' => $last ?? '',
-            'phone' => fake()->phoneNumber(),
-            'address' => fake()->streetAddress(),
-            'city' => fake()->city(),
-            'state' => fake()->state(),
-            'zip' => fake()->postcode(),
-            'country' => fake()->country(),
-            'timezone' => fake()->timezone(),
-            'locale' => fake()->locale(),
-            'currency' => fake()->currencyCode(),
+            'phone' => '555-' . str_pad((string) crc32($user->email), 7, '0', STR_PAD_LEFT),
+            'address' => ($user->id * 100) . ' Main St',
+            'city' => 'Vancouver',
+            'state' => 'BC',
+            'zip' => 'V6B 1A1',
+            'country' => 'Canada',
+            'timezone' => 'America/Vancouver',
+            'locale' => 'en',
+            'currency' => 'CAD',
         ]);
     }
 }
