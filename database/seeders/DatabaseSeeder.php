@@ -65,7 +65,7 @@ class DatabaseSeeder extends Seeder
         for ($i = 0; $i < 10; $i++) {
             $first = fake()->randomElement(SafeNames::FIRST_NAMES);
             $last = fake()->randomElement(SafeNames::LAST_NAMES);
-            $suffix = Str::lower(Str::random(4));
+            $suffix = fake()->numerify('####');
 
             $user = User::factory()->create([
                 'name' => "$first $last",
