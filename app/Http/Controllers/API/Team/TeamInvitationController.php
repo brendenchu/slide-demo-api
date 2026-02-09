@@ -8,8 +8,8 @@ use App\Http\Requests\API\Team\InviteTeamMemberRequest;
 use App\Http\Resources\API\Account\TeamInvitationResource;
 use App\Models\Account\Team;
 use App\Models\Account\TeamInvitation;
+use App\Models\Notification;
 use App\Models\User;
-use App\Notifications\TeamInvitationNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
 
@@ -59,7 +59,14 @@ class TeamInvitationController extends ApiController
 
         if ($existingUser) {
             $invitation->update(['user_id' => $existingUser->id]);
-            $existingUser->notify(new TeamInvitationNotification($invitation));
+            Notification::create([
+                'recipient_id' => $existingUser->id,
+                'sender_id' => auth()->id(),
+                'title' => 'Team invitation',
+                'content' => auth()->user()->name . " invited you to join {$team->label}",
+                'type' => 'team_invitation',
+                'link' => '/invitations',
+            ]);
         }
 
         $invitation->load('invitedBy');

@@ -1,0 +1,207 @@
+<?php
+
+use App\Models\Account\Team;
+use App\Models\Account\TeamInvitation;
+use App\Models\Story\Project;
+use App\Models\User;
+use App\Support\SafeNames;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
+use Tests\TestCase;
+
+uses(TestCase::class, RefreshDatabase::class);
+
+beforeEach(function (): void {
+    config()->set('demo.enabled', true);
+});
+
+// --- Registration Limits ---
+
+it('blocks registration when user limit is reached', function (): void {
+    config()->set('demo.limits.max_users', 2);
+
+    User::factory()->count(2)->create();
+
+    $response = $this->postJson('/api/v1/auth/register', [
+        'first_name' => SafeNames::FIRST_NAMES[0],
+        'last_name' => SafeNames::LAST_NAMES[0],
+    ]);
+
+    $response->assertForbidden()
+        ->assertJson([
+            'success' => false,
+            'message' => 'Demo limit reached: maximum of 2 user accounts.',
+        ]);
+});
+
+it('allows registration when under user limit', function (): void {
+    config()->set('demo.limits.max_users', 5);
+
+    $response = $this->postJson('/api/v1/auth/register', [
+        'first_name' => SafeNames::FIRST_NAMES[0],
+        'last_name' => SafeNames::LAST_NAMES[0],
+    ]);
+
+    $response->assertCreated();
+});
+
+it('allows registration when demo mode is off', function (): void {
+    config()->set('demo.enabled', false);
+    config()->set('demo.limits.max_users', 1);
+
+    User::factory()->create();
+
+    $response = $this->postJson('/api/v1/auth/register', [
+        'first_name' => SafeNames::FIRST_NAMES[0],
+        'last_name' => SafeNames::LAST_NAMES[0],
+    ]);
+
+    $response->assertCreated();
+});
+
+// --- Team Creation Limits ---
+
+it('blocks team creation when team limit per user is reached', function (): void {
+    config()->set('demo.limits.max_teams_per_user', 1);
+
+    $user = User::factory()->create();
+    Sanctum::actingAs($user);
+
+    // User already has personal team from factory, create one non-personal
+    Team::factory()->withOwner($user)->create(['is_personal' => false]);
+
+    $response = $this->postJson('/api/v1/teams', [
+        'name' => 'Another Team',
+    ]);
+
+    $response->assertForbidden()
+        ->assertJson([
+            'success' => false,
+            'message' => 'Demo limit reached: maximum of 1 teams per user.',
+        ]);
+});
+
+it('allows team creation when under team limit', function (): void {
+    config()->set('demo.limits.max_teams_per_user', 5);
+
+    $user = User::factory()->create();
+    Sanctum::actingAs($user);
+
+    $response = $this->postJson('/api/v1/teams', [
+        'name' => 'New Team',
+    ]);
+
+    $response->assertCreated();
+});
+
+it('does not count personal teams toward team limit', function (): void {
+    config()->set('demo.limits.max_teams_per_user', 1);
+
+    $user = User::factory()->create();
+    Sanctum::actingAs($user);
+
+    // User has a personal team from factory, but limit only counts non-personal
+    $response = $this->postJson('/api/v1/teams', [
+        'name' => 'First Non-Personal Team',
+    ]);
+
+    $response->assertCreated();
+});
+
+// --- Project Creation Limits ---
+
+it('blocks project creation when project limit per team is reached', function (): void {
+    config()->set('demo.limits.max_projects_per_team', 2);
+
+    $user = User::factory()->create();
+    Sanctum::actingAs($user);
+
+    $team = $user->currentTeam();
+
+    // Attach 2 projects to the team
+    $projects = Project::factory()->count(2)->create(['user_id' => $user->id]);
+    foreach ($projects as $project) {
+        $team->projects()->attach($project->id);
+    }
+
+    $response = $this->postJson('/api/v1/projects', [
+        'title' => 'One Too Many',
+        'description' => 'Should be blocked',
+    ]);
+
+    $response->assertForbidden()
+        ->assertJson([
+            'success' => false,
+            'message' => 'Demo limit reached: maximum of 2 projects per team.',
+        ]);
+});
+
+it('allows project creation when under project limit', function (): void {
+    config()->set('demo.limits.max_projects_per_team', 10);
+
+    $user = User::factory()->create();
+    Sanctum::actingAs($user);
+
+    $response = $this->postJson('/api/v1/projects', [
+        'title' => 'New Project',
+        'description' => 'Description',
+    ]);
+
+    $response->assertCreated();
+});
+
+// --- Invitation Limits ---
+
+it('blocks invitation creation when invitation limit per team is reached', function (): void {
+    config()->set('demo.limits.max_invitations_per_team', 1);
+
+    $admin = User::factory()->create();
+    Sanctum::actingAs($admin);
+
+    $team = Team::factory()->withOwner($admin)->create();
+
+    TeamInvitation::factory()->create([
+        'team_id' => $team->id,
+        'invited_by' => $admin->id,
+    ]);
+
+    $response = $this->postJson("/api/v1/teams/{$team->public_id}/invitations", [
+        'email' => 'new@example.com',
+        'role' => 'member',
+    ]);
+
+    $response->assertForbidden()
+        ->assertJson([
+            'success' => false,
+            'message' => 'Demo limit reached: maximum of 1 pending invitations per team.',
+        ]);
+});
+
+it('allows invitation creation when under invitation limit', function (): void {
+    config()->set('demo.limits.max_invitations_per_team', 10);
+
+    $admin = User::factory()->create();
+    Sanctum::actingAs($admin);
+
+    $team = Team::factory()->withOwner($admin)->create();
+
+    User::factory()->create(['email' => 'new@example.com']);
+
+    $response = $this->postJson("/api/v1/teams/{$team->public_id}/invitations", [
+        'email' => 'new@example.com',
+        'role' => 'member',
+    ]);
+
+    $response->assertCreated();
+});
+
+// --- Non-POST routes pass through ---
+
+it('allows GET requests even when demo mode is on', function (): void {
+    $user = User::factory()->create();
+    Sanctum::actingAs($user);
+
+    $response = $this->getJson('/api/v1/projects');
+
+    $response->assertSuccessful();
+});

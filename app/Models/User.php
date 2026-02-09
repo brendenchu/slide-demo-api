@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\Account\TeamRole;
 use App\Enums\Account\TeamStatus;
 use App\Models\Account\Profile;
 use App\Models\Account\Team;
@@ -76,16 +77,7 @@ class User extends Authenticatable
     public function teams(): BelongsToMany
     {
         return $this->belongsToMany(Team::class, 'users_teams')
-            ->withPivot('is_admin')
             ->withTimestamps();
-    }
-
-    /**
-     * The teams owned by the user.
-     */
-    public function ownedTeams(): HasMany
-    {
-        return $this->hasMany(Team::class, 'owner_id');
     }
 
     /**
@@ -124,10 +116,10 @@ class User extends Authenticatable
                 'label' => $team_name,
                 'status' => TeamStatus::ACTIVE,
                 'is_personal' => true,
-                'owner_id' => $user->id,
             ]);
 
-            $user->teams()->attach($team->id, ['is_admin' => true]);
+            $user->teams()->attach($team->id);
+            $team->assignTeamRole($user, TeamRole::Owner);
 
             $user->setSetting('current_team', $team->key);
         });

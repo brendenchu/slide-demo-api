@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API\Team;
 
+use App\Enums\Account\TeamRole;
 use App\Http\Controllers\API\ApiController;
 use App\Http\Requests\API\Team\UpdateTeamMemberRequest;
 use App\Http\Resources\API\Account\TeamMemberResource;
@@ -19,6 +20,8 @@ class TeamMemberController extends ApiController
         }
 
         $members = $team->users()->get();
+
+        TeamMemberResource::$team = $team;
 
         return $this->success(TeamMemberResource::collection($members));
     }
@@ -68,9 +71,7 @@ class TeamMemberController extends ApiController
             return $this->error('You cannot change your own role', 422);
         }
 
-        $team->users()->updateExistingPivot($userId, [
-            'is_admin' => $request->input('role') === 'admin',
-        ]);
+        $team->assignTeamRole($member, TeamRole::from($request->input('role')));
 
         return $this->success(null, 'Member role updated successfully');
     }

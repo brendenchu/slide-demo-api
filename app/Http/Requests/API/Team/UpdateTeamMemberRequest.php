@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\API\Team;
 
+use App\Enums\Account\TeamRole;
 use App\Models\Account\Team;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -27,7 +28,7 @@ class UpdateTeamMemberRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'role' => ['required', 'string', Rule::in(['admin', 'member'])],
+            'role' => ['required', 'string', Rule::in(TeamRole::assignable())],
         ];
     }
 

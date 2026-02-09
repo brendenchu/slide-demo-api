@@ -15,8 +15,6 @@ class UserResource extends JsonResource
      * NOTE: For optimal performance, eager-load these relationships in your controller:
      * - profile
      * - teams
-     * - roles
-     * - permissions
      *
      * @return array<string, mixed>
      */
@@ -28,8 +26,6 @@ class UserResource extends JsonResource
             'email_verified_at' => $this->email_verified_at,
             'name' => $this->name,
             'team' => $this->when($this->relationLoaded('teams'), fn () => TeamResource::make($this->currentTeam())),
-            'roles' => $this->whenLoaded('roles', fn () => $this->getRoleNames()),
-            'permissions' => $this->whenLoaded('permissions', fn () => $this->getPermissionsViaRoles()->pluck('name')),
         ];
     }
 }

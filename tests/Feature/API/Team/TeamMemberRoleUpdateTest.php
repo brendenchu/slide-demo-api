@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Account\TeamRole;
 use App\Models\Account\Team;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -13,10 +14,12 @@ it('allows admin to promote member to admin', function (): void {
     Sanctum::actingAs($admin);
 
     $team = Team::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     $member = User::factory()->create();
-    $team->users()->attach($member->id, ['is_admin' => false]);
+    $team->users()->attach($member->id);
+    $team->assignTeamRole($member, TeamRole::Member);
 
     $response = $this->putJson("/api/v1/teams/{$team->public_id}/members/{$member->id}/role", [
         'role' => 'admin',
@@ -36,10 +39,12 @@ it('allows admin to demote admin to member', function (): void {
     Sanctum::actingAs($admin);
 
     $team = Team::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     $otherAdmin = User::factory()->create();
-    $team->users()->attach($otherAdmin->id, ['is_admin' => true]);
+    $team->users()->attach($otherAdmin->id);
+    $team->assignTeamRole($otherAdmin, TeamRole::Admin);
 
     $response = $this->putJson("/api/v1/teams/{$team->public_id}/members/{$otherAdmin->id}/role", [
         'role' => 'member',
@@ -55,7 +60,8 @@ it('prevents admin from changing their own role', function (): void {
     Sanctum::actingAs($admin);
 
     $team = Team::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     $response = $this->putJson("/api/v1/teams/{$team->public_id}/members/{$admin->id}/role", [
         'role' => 'member',
@@ -74,8 +80,10 @@ it('denies non-admin from updating roles', function (): void {
     Sanctum::actingAs($member);
 
     $team = Team::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
-    $team->users()->attach($member->id, ['is_admin' => false]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
+    $team->users()->attach($member->id);
+    $team->assignTeamRole($member, TeamRole::Member);
 
     $response = $this->putJson("/api/v1/teams/{$team->public_id}/members/{$admin->id}/role", [
         'role' => 'member',
@@ -89,10 +97,12 @@ it('validates role field is required', function (): void {
     Sanctum::actingAs($admin);
 
     $team = Team::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     $member = User::factory()->create();
-    $team->users()->attach($member->id, ['is_admin' => false]);
+    $team->users()->attach($member->id);
+    $team->assignTeamRole($member, TeamRole::Member);
 
     $response = $this->putJson("/api/v1/teams/{$team->public_id}/members/{$member->id}/role", []);
 
@@ -105,10 +115,12 @@ it('validates role must be admin or member', function (): void {
     Sanctum::actingAs($admin);
 
     $team = Team::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     $member = User::factory()->create();
-    $team->users()->attach($member->id, ['is_admin' => false]);
+    $team->users()->attach($member->id);
+    $team->assignTeamRole($member, TeamRole::Member);
 
     $response = $this->putJson("/api/v1/teams/{$team->public_id}/members/{$member->id}/role", [
         'role' => 'owner',
@@ -123,9 +135,9 @@ it('prevents changing the owner role', function (): void {
     $admin = User::factory()->create();
     Sanctum::actingAs($admin);
 
-    $team = Team::factory()->ownedBy($owner)->create();
-    $team->users()->attach($owner->id, ['is_admin' => true]);
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team = Team::factory()->withOwner($owner)->create();
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     $response = $this->putJson("/api/v1/teams/{$team->public_id}/members/{$owner->id}/role", [
         'role' => 'member',

@@ -20,7 +20,7 @@ class UserController extends ApiController
         $user = $request->user();
 
         // Load relationships for the resource
-        $user->load(['profile', 'teams', 'roles', 'permissions']);
+        $user->load(['profile', 'teams']);
 
         return $this->success([
             'user' => new UserResource($user),
@@ -50,7 +50,7 @@ class UserController extends ApiController
         }
 
         // Reload relationships
-        $user->refresh()->load(['profile', 'teams', 'roles', 'permissions']);
+        $user->refresh()->load(['profile', 'teams']);
 
         return $this->success([
             'user' => new UserResource($user),

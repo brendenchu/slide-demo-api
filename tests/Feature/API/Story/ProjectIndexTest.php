@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Account\TeamRole;
 use App\Enums\Story\ProjectStatus;
 use App\Models\Account\Team;
 use App\Models\Story\Project;
@@ -199,8 +200,10 @@ it('scopes projects to current team', function (): void {
     $teamA = Team::factory()->create();
     $teamB = Team::factory()->create();
 
-    $user->teams()->attach($teamA->id, ['is_admin' => true]);
-    $user->teams()->attach($teamB->id, ['is_admin' => false]);
+    $user->teams()->attach($teamA->id);
+    $teamA->assignTeamRole($user, TeamRole::Admin);
+    $user->teams()->attach($teamB->id);
+    $teamB->assignTeamRole($user, TeamRole::Member);
     $user->setSetting('current_team', $teamA->key);
 
     $projectA = Project::factory()->create(['user_id' => $user->id]);
@@ -223,8 +226,10 @@ it('returns empty results when current team has no projects', function (): void 
     $teamA = Team::factory()->create();
     $teamB = Team::factory()->create();
 
-    $user->teams()->attach($teamA->id, ['is_admin' => true]);
-    $user->teams()->attach($teamB->id, ['is_admin' => false]);
+    $user->teams()->attach($teamA->id);
+    $teamA->assignTeamRole($user, TeamRole::Admin);
+    $user->teams()->attach($teamB->id);
+    $teamB->assignTeamRole($user, TeamRole::Member);
     $user->setSetting('current_team', $teamB->key);
 
     $project = Project::factory()->create(['user_id' => $user->id]);

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API\Team;
 
+use App\Enums\Account\TeamRole;
 use App\Enums\Account\TeamStatus;
 use App\Http\Controllers\API\ApiController;
 use App\Http\Requests\API\Team\CreateTeamRequest;
@@ -24,11 +25,22 @@ class TeamController extends ApiController
 
     public function show(string $teamId): JsonResponse
     {
-        $team = Team::where('public_id', $teamId)
+        $teamExists = Team::where('public_id', $teamId)
             ->orWhere('id', $teamId)
-            ->firstOrFail();
+            ->exists();
 
-        if (! auth()->user()->teams->contains($team)) {
+        if (! $teamExists) {
+            return $this->notFound('Team not found');
+        }
+
+        $team = auth()->user()->teams()
+            ->where(function ($query) use ($teamId): void {
+                $query->where('teams.public_id', $teamId)
+                    ->orWhere('teams.id', $teamId);
+            })
+            ->first();
+
+        if (! $team) {
             return $this->forbidden('You do not have access to this team');
         }
 
@@ -47,10 +59,10 @@ class TeamController extends ApiController
             'label' => $request->input('name'),
             'description' => $request->input('description'),
             'status' => $statusValue,
-            'owner_id' => $request->user()->id,
         ]);
 
-        $team->users()->attach($request->user()->id, ['is_admin' => true]);
+        $team->users()->attach($request->user()->id);
+        $team->assignTeamRole($request->user(), TeamRole::Owner);
 
         return $this->created(new TeamResource($team), 'Team created successfully');
     }
@@ -96,8 +108,8 @@ class TeamController extends ApiController
             ->orWhere('id', $teamId)
             ->firstOrFail();
 
-        if (! $team->isAdmin(auth()->user())) {
-            return $this->forbidden('Only team admins can delete a team');
+        if (! $team->isOwner(auth()->user())) {
+            return $this->forbidden('Only the team owner can delete a team');
         }
 
         if ($team->is_personal) {

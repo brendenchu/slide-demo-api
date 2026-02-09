@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\Account\InvitationStatus;
+use App\Enums\Account\TeamRole;
 use App\Models\Account\Team;
 use App\Models\Account\TeamInvitation;
 use App\Models\User;
@@ -16,7 +17,8 @@ it('allows user to accept a pending invitation', function (): void {
 
     $team = Team::factory()->create();
     $admin = User::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     $invitation = TeamInvitation::factory()->create([
         'team_id' => $team->id,
@@ -25,9 +27,7 @@ it('allows user to accept a pending invitation', function (): void {
         'role' => 'member',
     ]);
 
-    $response = $this->postJson("/api/v1/invitations/{$invitation->public_id}/accept", [
-        'token' => $invitation->token,
-    ]);
+    $response = $this->postJson("/api/v1/invitations/{$invitation->public_id}/accept");
 
     $response->assertSuccessful()
         ->assertJson([
@@ -47,7 +47,8 @@ it('adds user with correct role when accepting admin invitation', function (): v
 
     $team = Team::factory()->create();
     $admin = User::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     $invitation = TeamInvitation::factory()->asAdmin()->create([
         'team_id' => $team->id,
@@ -55,9 +56,7 @@ it('adds user with correct role when accepting admin invitation', function (): v
         'email' => 'admin-invitee@example.com',
     ]);
 
-    $response = $this->postJson("/api/v1/invitations/{$invitation->public_id}/accept", [
-        'token' => $invitation->token,
-    ]);
+    $response = $this->postJson("/api/v1/invitations/{$invitation->public_id}/accept");
 
     $response->assertSuccessful();
 
@@ -70,7 +69,8 @@ it('rejects expired invitation', function (): void {
 
     $team = Team::factory()->create();
     $admin = User::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     $invitation = TeamInvitation::factory()->expired()->create([
         'team_id' => $team->id,
@@ -78,9 +78,7 @@ it('rejects expired invitation', function (): void {
         'email' => 'expired@example.com',
     ]);
 
-    $response = $this->postJson("/api/v1/invitations/{$invitation->public_id}/accept", [
-        'token' => $invitation->token,
-    ]);
+    $response = $this->postJson("/api/v1/invitations/{$invitation->public_id}/accept");
 
     $response->assertStatus(422)
         ->assertJson([
@@ -95,7 +93,8 @@ it('rejects acceptance by wrong email', function (): void {
 
     $team = Team::factory()->create();
     $admin = User::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     $invitation = TeamInvitation::factory()->create([
         'team_id' => $team->id,
@@ -103,9 +102,7 @@ it('rejects acceptance by wrong email', function (): void {
         'email' => 'correct@example.com',
     ]);
 
-    $response = $this->postJson("/api/v1/invitations/{$invitation->public_id}/accept", [
-        'token' => $invitation->token,
-    ]);
+    $response = $this->postJson("/api/v1/invitations/{$invitation->public_id}/accept");
 
     $response->assertForbidden();
 });
@@ -116,8 +113,10 @@ it('rejects if user is already a team member', function (): void {
 
     $team = Team::factory()->create();
     $admin = User::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
-    $team->users()->attach($invitee->id, ['is_admin' => false]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
+    $team->users()->attach($invitee->id);
+    $team->assignTeamRole($invitee, TeamRole::Member);
 
     $invitation = TeamInvitation::factory()->create([
         'team_id' => $team->id,
@@ -125,9 +124,7 @@ it('rejects if user is already a team member', function (): void {
         'email' => 'already-member@example.com',
     ]);
 
-    $response = $this->postJson("/api/v1/invitations/{$invitation->public_id}/accept", [
-        'token' => $invitation->token,
-    ]);
+    $response = $this->postJson("/api/v1/invitations/{$invitation->public_id}/accept");
 
     $response->assertStatus(422)
         ->assertJson([
@@ -136,30 +133,8 @@ it('rejects if user is already a team member', function (): void {
         ]);
 });
 
-it('validates token is required', function (): void {
-    $invitee = User::factory()->create();
-    Sanctum::actingAs($invitee);
-
-    $team = Team::factory()->create();
-    $admin = User::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
-
-    $invitation = TeamInvitation::factory()->create([
-        'team_id' => $team->id,
-        'invited_by' => $admin->id,
-        'email' => $invitee->email,
-    ]);
-
-    $response = $this->postJson("/api/v1/invitations/{$invitation->public_id}/accept", []);
-
-    $response->assertStatus(422)
-        ->assertJsonValidationErrors(['token']);
-});
-
 it('denies access to unauthenticated users', function (): void {
-    $response = $this->postJson('/api/v1/invitations/some-id/accept', [
-        'token' => 'some-token',
-    ]);
+    $response = $this->postJson('/api/v1/invitations/some-id/accept');
 
     $response->assertUnauthorized();
 });

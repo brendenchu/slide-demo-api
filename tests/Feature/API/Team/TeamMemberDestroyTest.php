@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Account\TeamRole;
 use App\Models\Account\Team;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -13,10 +14,12 @@ it('allows admin to remove a member', function (): void {
     Sanctum::actingAs($admin);
 
     $team = Team::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     $member = User::factory()->create();
-    $team->users()->attach($member->id, ['is_admin' => false]);
+    $team->users()->attach($member->id);
+    $team->assignTeamRole($member, TeamRole::Member);
 
     $response = $this->deleteJson("/api/v1/teams/{$team->public_id}/members/{$member->id}");
 
@@ -34,7 +37,8 @@ it('prevents admin from removing themselves', function (): void {
     Sanctum::actingAs($admin);
 
     $team = Team::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     $response = $this->deleteJson("/api/v1/teams/{$team->public_id}/members/{$admin->id}");
 
@@ -53,11 +57,14 @@ it('denies non-admin from removing members', function (): void {
     Sanctum::actingAs($member);
 
     $team = Team::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
-    $team->users()->attach($member->id, ['is_admin' => false]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
+    $team->users()->attach($member->id);
+    $team->assignTeamRole($member, TeamRole::Member);
 
     $otherMember = User::factory()->create();
-    $team->users()->attach($otherMember->id, ['is_admin' => false]);
+    $team->users()->attach($otherMember->id);
+    $team->assignTeamRole($otherMember, TeamRole::Member);
 
     $response = $this->deleteJson("/api/v1/teams/{$team->public_id}/members/{$otherMember->id}");
 
@@ -69,7 +76,8 @@ it('returns 404 when member does not exist', function (): void {
     Sanctum::actingAs($admin);
 
     $team = Team::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     $response = $this->deleteJson("/api/v1/teams/{$team->public_id}/members/99999");
 
@@ -81,9 +89,9 @@ it('prevents removing the team owner', function (): void {
     $admin = User::factory()->create();
     Sanctum::actingAs($admin);
 
-    $team = Team::factory()->ownedBy($owner)->create();
-    $team->users()->attach($owner->id, ['is_admin' => true]);
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team = Team::factory()->withOwner($owner)->create();
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     $response = $this->deleteJson("/api/v1/teams/{$team->public_id}/members/{$owner->id}");
 

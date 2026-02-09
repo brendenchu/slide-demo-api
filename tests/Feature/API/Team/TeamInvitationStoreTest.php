@@ -1,24 +1,24 @@
 <?php
 
+use App\Enums\Account\TeamRole;
 use App\Models\Account\Team;
 use App\Models\Account\TeamInvitation;
 use App\Models\User;
-use App\Notifications\TeamInvitationNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Notification;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
 
 it('allows admin to invite a member', function (): void {
-    Notification::fake();
-
     $admin = User::factory()->create();
     Sanctum::actingAs($admin);
 
     $team = Team::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
+
+    $invitee = User::factory()->create(['email' => 'new@example.com']);
 
     $response = $this->postJson("/api/v1/teams/{$team->public_id}/invitations", [
         'email' => 'new@example.com',
@@ -48,14 +48,13 @@ it('allows admin to invite a member', function (): void {
     ]);
 });
 
-it('sends notification to existing user', function (): void {
-    Notification::fake();
-
+it('creates notification for existing user', function (): void {
     $admin = User::factory()->create();
     Sanctum::actingAs($admin);
 
     $team = Team::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     $invitee = User::factory()->create(['email' => 'existing@example.com']);
 
@@ -66,17 +65,20 @@ it('sends notification to existing user', function (): void {
 
     $response->assertCreated();
 
-    Notification::assertSentTo($invitee, TeamInvitationNotification::class);
+    $this->assertDatabaseHas('notifications', [
+        'recipient_id' => $invitee->id,
+        'sender_id' => $admin->id,
+        'type' => 'team_invitation',
+    ]);
 });
 
 it('links invitation to existing user', function (): void {
-    Notification::fake();
-
     $admin = User::factory()->create();
     Sanctum::actingAs($admin);
 
     $team = Team::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     $invitee = User::factory()->create(['email' => 'existing@example.com']);
 
@@ -92,13 +94,14 @@ it('links invitation to existing user', function (): void {
 });
 
 it('prevents duplicate invitations', function (): void {
-    Notification::fake();
-
     $admin = User::factory()->create();
     Sanctum::actingAs($admin);
 
     $team = Team::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
+
+    User::factory()->create(['email' => 'duplicate@example.com']);
 
     TeamInvitation::factory()->create([
         'team_id' => $team->id,
@@ -123,10 +126,12 @@ it('prevents inviting existing members', function (): void {
     Sanctum::actingAs($admin);
 
     $team = Team::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     $member = User::factory()->create();
-    $team->users()->attach($member->id, ['is_admin' => false]);
+    $team->users()->attach($member->id);
+    $team->assignTeamRole($member, TeamRole::Member);
 
     $response = $this->postJson("/api/v1/teams/{$team->public_id}/invitations", [
         'email' => $member->email,
@@ -140,14 +145,59 @@ it('prevents inviting existing members', function (): void {
         ]);
 });
 
+it('denies admin from inviting as admin role', function (): void {
+    $admin = User::factory()->create();
+    Sanctum::actingAs($admin);
+
+    $team = Team::factory()->create();
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
+
+    $invitee = User::factory()->create(['email' => 'new@example.com']);
+
+    $response = $this->postJson("/api/v1/teams/{$team->public_id}/invitations", [
+        'email' => 'new@example.com',
+        'role' => 'admin',
+    ]);
+
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['role']);
+});
+
+it('allows owner to invite as admin role', function (): void {
+    $owner = User::factory()->create();
+    Sanctum::actingAs($owner);
+
+    $team = Team::factory()->withOwner($owner)->create();
+
+    $invitee = User::factory()->create(['email' => 'new@example.com']);
+
+    $response = $this->postJson("/api/v1/teams/{$team->public_id}/invitations", [
+        'email' => 'new@example.com',
+        'role' => 'admin',
+    ]);
+
+    $response->assertCreated()
+        ->assertJson([
+            'success' => true,
+            'data' => [
+                'email' => 'new@example.com',
+                'role' => 'admin',
+                'status' => 'pending',
+            ],
+        ]);
+});
+
 it('denies non-admin from inviting', function (): void {
     $member = User::factory()->create();
     Sanctum::actingAs($member);
 
     $team = Team::factory()->create();
     $admin = User::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
-    $team->users()->attach($member->id, ['is_admin' => false]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
+    $team->users()->attach($member->id);
+    $team->assignTeamRole($member, TeamRole::Member);
 
     $response = $this->postJson("/api/v1/teams/{$team->public_id}/invitations", [
         'email' => 'new@example.com',
@@ -162,7 +212,8 @@ it('validates email is required', function (): void {
     Sanctum::actingAs($admin);
 
     $team = Team::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     $response = $this->postJson("/api/v1/teams/{$team->public_id}/invitations", [
         'role' => 'member',
@@ -177,7 +228,8 @@ it('validates email format', function (): void {
     Sanctum::actingAs($admin);
 
     $team = Team::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     $response = $this->postJson("/api/v1/teams/{$team->public_id}/invitations", [
         'email' => 'not-an-email',
@@ -193,7 +245,8 @@ it('validates role is required', function (): void {
     Sanctum::actingAs($admin);
 
     $team = Team::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     $response = $this->postJson("/api/v1/teams/{$team->public_id}/invitations", [
         'email' => 'new@example.com',
@@ -208,7 +261,8 @@ it('validates role must be admin or member', function (): void {
     Sanctum::actingAs($admin);
 
     $team = Team::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     $response = $this->postJson("/api/v1/teams/{$team->public_id}/invitations", [
         'email' => 'new@example.com',
@@ -217,6 +271,23 @@ it('validates role must be admin or member', function (): void {
 
     $response->assertStatus(422)
         ->assertJsonValidationErrors(['role']);
+});
+
+it('rejects non-registered email address', function (): void {
+    $admin = User::factory()->create();
+    Sanctum::actingAs($admin);
+
+    $team = Team::factory()->create();
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
+
+    $response = $this->postJson("/api/v1/teams/{$team->public_id}/invitations", [
+        'email' => 'nonexistent@example.com',
+        'role' => 'member',
+    ]);
+
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['email']);
 });
 
 it('denies access to unauthenticated users', function (): void {

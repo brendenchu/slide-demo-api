@@ -1,25 +1,20 @@
 <?php
 
-use App\Enums\Role;
 use App\Models\User;
+use App\Support\SafeNames;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Role as SpatieRole;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
 
-beforeEach(function (): void {
-    foreach (Role::cases() as $role) {
-        SpatieRole::create(['name' => $role->value, 'guard_name' => 'web']);
-    }
-});
-
 it('can register a new user with valid data', function (): void {
+    $firstName = SafeNames::FIRST_NAMES[0];
+    $lastName = SafeNames::LAST_NAMES[0];
+
     $response = $this->postJson('/api/v1/auth/register', [
-        'name' => 'John Doe',
-        'email' => 'john@example.com',
-        'password' => 'password123',
-        'password_confirmation' => 'password123',
+        'first_name' => $firstName,
+        'last_name' => $lastName,
     ]);
 
     $response->assertStatus(201)
@@ -27,10 +22,8 @@ it('can register a new user with valid data', function (): void {
             'success',
             'data' => [
                 'user' => [
-                    'id',
                     'name',
                     'email',
-                    'roles',
                 ],
                 'token',
             ],
@@ -40,93 +33,95 @@ it('can register a new user with valid data', function (): void {
             'success' => true,
             'data' => [
                 'user' => [
-                    'name' => 'John Doe',
-                    'email' => 'john@example.com',
+                    'name' => "$firstName $lastName",
                 ],
             ],
         ]);
 
     expect($response['data']['token'])->not->toBeNull()->toBeString();
-    expect(User::where('email', 'john@example.com')->exists())->toBeTrue();
+
+    // Email should be auto-generated
+    $email = $response['data']['user']['email'];
+    expect($email)->toContain(strtolower($firstName));
+    expect($email)->toContain(strtolower($lastName));
+    expect($email)->toEndWith('@example.com');
+    expect(User::where('email', $email)->exists())->toBeTrue();
 });
 
-it('assigns client role to newly registered users', function (): void {
-    $this->postJson('/api/v1/auth/register', [
-        'name' => 'Jane Doe',
-        'email' => 'jane@example.com',
-        'password' => 'password123',
-        'password_confirmation' => 'password123',
+it('creates a profile for newly registered users with names', function (): void {
+    $firstName = SafeNames::FIRST_NAMES[1];
+    $lastName = SafeNames::LAST_NAMES[1];
+
+    $response = $this->postJson('/api/v1/auth/register', [
+        'first_name' => $firstName,
+        'last_name' => $lastName,
     ]);
 
-    $user = User::where('email', 'jane@example.com')->first();
-    expect($user->hasRole('client'))->toBeTrue();
-});
-
-it('creates a profile for newly registered users', function (): void {
-    $this->postJson('/api/v1/auth/register', [
-        'name' => 'Bob Smith',
-        'email' => 'bob@example.com',
-        'password' => 'password123',
-        'password_confirmation' => 'password123',
-    ]);
-
-    $user = User::where('email', 'bob@example.com')->first();
+    $email = $response['data']['user']['email'];
+    $user = User::where('email', $email)->first();
     expect($user->profile)->not->toBeNull();
+    expect($user->profile->first_name)->toBe($firstName);
+    expect($user->profile->last_name)->toBe($lastName);
+});
+
+it('generates unique emails for same name combinations', function (): void {
+    $firstName = SafeNames::FIRST_NAMES[0];
+    $lastName = SafeNames::LAST_NAMES[0];
+
+    $response1 = $this->postJson('/api/v1/auth/register', [
+        'first_name' => $firstName,
+        'last_name' => $lastName,
+    ]);
+
+    $response2 = $this->postJson('/api/v1/auth/register', [
+        'first_name' => $firstName,
+        'last_name' => $lastName,
+    ]);
+
+    $response1->assertStatus(201);
+    $response2->assertStatus(201);
+
+    $email1 = $response1['data']['user']['email'];
+    $email2 = $response2['data']['user']['email'];
+    expect($email1)->not->toBe($email2);
+});
+
+it('sets password to default value', function (): void {
+    $response = $this->postJson('/api/v1/auth/register', [
+        'first_name' => SafeNames::FIRST_NAMES[0],
+        'last_name' => SafeNames::LAST_NAMES[0],
+    ]);
+
+    $response->assertStatus(201);
+
+    $email = $response['data']['user']['email'];
+    $user = User::where('email', $email)->first();
+    expect(Hash::check('password123', $user->password))->toBeTrue();
 });
 
 it('validates required fields', function (): void {
     $response = $this->postJson('/api/v1/auth/register', []);
 
     $response->assertStatus(422)
-        ->assertJsonValidationErrors(['name', 'email', 'password']);
+        ->assertJsonValidationErrors(['first_name', 'last_name']);
 });
 
-it('validates email format', function (): void {
+it('rejects first names not in the safe list', function (): void {
     $response = $this->postJson('/api/v1/auth/register', [
-        'name' => 'Test User',
-        'email' => 'not-an-email',
-        'password' => 'password123',
-        'password_confirmation' => 'password123',
+        'first_name' => 'InvalidFirstName',
+        'last_name' => SafeNames::LAST_NAMES[0],
     ]);
 
     $response->assertStatus(422)
-        ->assertJsonValidationErrors(['email']);
+        ->assertJsonValidationErrors(['first_name']);
 });
 
-it('validates email uniqueness', function (): void {
-    User::factory()->create(['email' => 'existing@example.com']);
-
+it('rejects last names not in the safe list', function (): void {
     $response = $this->postJson('/api/v1/auth/register', [
-        'name' => 'Test User',
-        'email' => 'existing@example.com',
-        'password' => 'password123',
-        'password_confirmation' => 'password123',
+        'first_name' => SafeNames::FIRST_NAMES[0],
+        'last_name' => 'InvalidLastName',
     ]);
 
     $response->assertStatus(422)
-        ->assertJsonValidationErrors(['email']);
-});
-
-it('validates password confirmation', function (): void {
-    $response = $this->postJson('/api/v1/auth/register', [
-        'name' => 'Test User',
-        'email' => 'test@example.com',
-        'password' => 'password123',
-        'password_confirmation' => 'differentpassword',
-    ]);
-
-    $response->assertStatus(422)
-        ->assertJsonValidationErrors(['password']);
-});
-
-it('validates password minimum length', function (): void {
-    $response = $this->postJson('/api/v1/auth/register', [
-        'name' => 'Test User',
-        'email' => 'test@example.com',
-        'password' => 'short',
-        'password_confirmation' => 'short',
-    ]);
-
-    $response->assertStatus(422)
-        ->assertJsonValidationErrors(['password']);
+        ->assertJsonValidationErrors(['last_name']);
 });

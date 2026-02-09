@@ -2,10 +2,12 @@
 
 use App\Http\Controllers\API\Auth\LoginController;
 use App\Http\Controllers\API\Auth\LogoutController;
-use App\Http\Controllers\API\Auth\PasswordController;
 use App\Http\Controllers\API\Auth\RegisterController;
 use App\Http\Controllers\API\Auth\UserController;
+use App\Http\Controllers\API\DemoStatusController;
 use App\Http\Controllers\API\GetCurrentTeamController;
+use App\Http\Controllers\API\NotificationController;
+use App\Http\Controllers\API\SafeNamesController;
 use App\Http\Controllers\API\SetCurrentTeamController;
 use App\Http\Controllers\API\Story\CompleteProjectController;
 use App\Http\Controllers\API\Story\ProjectController;
@@ -16,6 +18,7 @@ use App\Http\Controllers\API\Team\TeamInvitationController;
 use App\Http\Controllers\API\Team\TeamMemberController;
 use App\Http\Controllers\API\Team\TransferTeamOwnershipController;
 use App\Http\Controllers\API\Team\UserInvitationController;
+use App\Http\Controllers\API\Team\UserSearchController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -31,14 +34,18 @@ use Illuminate\Support\Facades\Route;
 // API v1 Routes
 Route::prefix('v1')->group(function (): void {
 
+    // Public endpoints
+    Route::get('demo/status', DemoStatusController::class)->name('api.v1.demo.status');
+    Route::get('names', SafeNamesController::class)->name('api.v1.names');
+
     // Public authentication routes with strict rate limiting (5 attempts per minute)
-    Route::prefix('auth')->middleware('throttle:5,1')->group(function (): void {
+    Route::prefix('auth')->middleware(['throttle:5,1', 'demo_limit'])->group(function (): void {
         Route::post('login', LoginController::class)->name('api.v1.auth.login');
         Route::post('register', RegisterController::class)->name('api.v1.auth.register');
     });
 
     // Protected routes (require authentication) with standard rate limiting (60 per minute)
-    Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function (): void {
+    Route::middleware(['auth:sanctum', 'throttle:60,1', 'demo_limit', 'protect_demo_account'])->group(function (): void {
 
         // Auth user profile routes
         Route::prefix('auth')->group(function (): void {
@@ -46,7 +53,6 @@ Route::prefix('v1')->group(function (): void {
             Route::get('user', [UserController::class, 'show'])->name('api.v1.auth.user');
             Route::put('user', [UserController::class, 'update'])->name('api.v1.auth.update');
             Route::delete('user', [UserController::class, 'destroy'])->name('api.v1.auth.destroy');
-            Route::put('password', [PasswordController::class, 'update'])->name('api.v1.auth.password');
         });
 
         // Projects routes
@@ -60,16 +66,8 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/{id}/complete', CompleteProjectController::class)->name('api.v1.projects.complete');
         });
 
-        // Admin routes (require permission)
-        Route::prefix('admin')->group(function (): void {
-            Route::prefix('users')->group(function (): void {
-                Route::get('/', [\App\Http\Controllers\API\Admin\UserController::class, 'index'])->name('api.v1.admin.users.index');
-                Route::post('/', [\App\Http\Controllers\API\Admin\UserController::class, 'store'])->name('api.v1.admin.users.store');
-                Route::get('/{id}', [\App\Http\Controllers\API\Admin\UserController::class, 'show'])->name('api.v1.admin.users.show');
-                Route::put('/{id}', [\App\Http\Controllers\API\Admin\UserController::class, 'update'])->name('api.v1.admin.users.update');
-                Route::delete('/{id}', [\App\Http\Controllers\API\Admin\UserController::class, 'destroy'])->name('api.v1.admin.users.destroy');
-            });
-        });
+        // User search (for team invitations)
+        Route::get('/users/search', UserSearchController::class)->name('api.v1.users.search');
 
         // Teams routes
         Route::prefix('teams')->group(function (): void {
@@ -93,6 +91,11 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/{teamId}/invitations', [TeamInvitationController::class, 'store'])->name('api.v1.teams.invitations.store');
             Route::delete('/{teamId}/invitations/{invitationId}', [TeamInvitationController::class, 'destroy'])->name('api.v1.teams.invitations.destroy');
         });
+
+        // Notifications
+        Route::get('/notifications', [NotificationController::class, 'index'])->name('api.v1.notifications.index');
+        Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('api.v1.notifications.read-all');
+        Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('api.v1.notifications.read');
 
         // User invitations
         Route::get('/invitations', [UserInvitationController::class, 'index'])->name('api.v1.invitations.index');

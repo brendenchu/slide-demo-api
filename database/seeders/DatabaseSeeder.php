@@ -2,12 +2,11 @@
 
 namespace Database\Seeders;
 
-use App\Enums\Permission as PermissionEnum;
-use App\Enums\Role as RoleEnum;
+use App\Enums\Account\TeamRole;
 use App\Models\User;
+use App\Support\SafeNames;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
-use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class DatabaseSeeder extends Seeder
@@ -17,67 +16,19 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->createRolesAndPermissions();
+        $this->createTeamRoles();
         $this->createDemoUsers();
         $this->createDummyUsers();
     }
 
     /**
-     * Create roles and assign permissions.
+     * Create team role definitions.
      */
-    private function createRolesAndPermissions(): void
+    private function createTeamRoles(): void
     {
-        foreach (RoleEnum::getInstances() as $role) {
-            Role::create(['name' => $role]);
+        foreach (TeamRole::cases() as $teamRole) {
+            Role::findOrCreate($teamRole->value, 'web');
         }
-
-        foreach (PermissionEnum::getInstances() as $permission) {
-            Permission::create(['name' => $permission]);
-        }
-
-        Role::findByName(RoleEnum::SuperAdmin->value)
-            ->givePermissionTo(PermissionEnum::getInstances());
-
-        Role::findByName(RoleEnum::Admin->value)->givePermissionTo([
-            PermissionEnum::ViewAnyUser,
-            PermissionEnum::ViewUser,
-            PermissionEnum::CreateUser,
-            PermissionEnum::UpdateUser,
-            PermissionEnum::DeleteUser,
-            PermissionEnum::ViewAnyTeam,
-            PermissionEnum::ViewTeam,
-            PermissionEnum::CreateTeam,
-            PermissionEnum::UpdateTeam,
-            PermissionEnum::DeleteTeam,
-            PermissionEnum::ViewAnyProject,
-            PermissionEnum::ViewProject,
-            PermissionEnum::CreateProject,
-            PermissionEnum::UpdateProject,
-            PermissionEnum::DeleteProject,
-        ]);
-
-        Role::findByName(RoleEnum::Consultant->value)->givePermissionTo([
-            PermissionEnum::ViewAnyUser,
-            PermissionEnum::ViewUser,
-            PermissionEnum::ViewAnyTeam,
-            PermissionEnum::ViewTeam,
-            PermissionEnum::ViewAnyProject,
-            PermissionEnum::ViewProject,
-            PermissionEnum::CreateProject,
-            PermissionEnum::UpdateProject,
-            PermissionEnum::DeleteProject,
-        ]);
-
-        Role::findByName(RoleEnum::Client->value)->givePermissionTo([
-            PermissionEnum::ViewProject,
-            PermissionEnum::CreateProject,
-            PermissionEnum::UpdateProject,
-        ]);
-
-        Role::findByName(RoleEnum::Guest->value)->givePermissionTo([
-            PermissionEnum::ViewProject,
-            PermissionEnum::CreateProject,
-        ]);
     }
 
     /**
@@ -87,34 +38,9 @@ class DatabaseSeeder extends Seeder
     {
         $demoUsers = [
             [
-                'name' => config('demo.super_admin_name'),
-                'email' => config('demo.super_admin_email'),
-                'password' => config('demo.super_admin_password'),
-                'role' => RoleEnum::SuperAdmin,
-            ],
-            [
-                'name' => config('demo.admin_name'),
-                'email' => config('demo.admin_email'),
-                'password' => config('demo.admin_password'),
-                'role' => RoleEnum::Admin,
-            ],
-            [
-                'name' => config('demo.consultant_name'),
-                'email' => config('demo.consultant_email'),
-                'password' => config('demo.consultant_password'),
-                'role' => RoleEnum::Consultant,
-            ],
-            [
-                'name' => config('demo.client_name'),
-                'email' => config('demo.client_email'),
-                'password' => config('demo.client_password'),
-                'role' => RoleEnum::Client,
-            ],
-            [
-                'name' => config('demo.guest_name'),
-                'email' => config('demo.guest_email'),
-                'password' => config('demo.guest_password'),
-                'role' => RoleEnum::Guest,
+                'name' => config('demo.demo_user_name'),
+                'email' => config('demo.demo_user_email'),
+                'password' => config('demo.demo_user_password'),
             ],
         ];
 
@@ -127,20 +53,25 @@ class DatabaseSeeder extends Seeder
                 'remember_token' => Str::random(10),
             ]);
 
-            $user->assignRole($data['role']);
             $this->fillProfile($user);
         }
     }
 
     /**
-     * Create 10 dummy users with the Client role and full profile details.
+     * Create 10 dummy users with full profile details using safe names.
      */
     private function createDummyUsers(): void
     {
-        $users = User::factory()->count(10)->create();
+        for ($i = 0; $i < 10; $i++) {
+            $first = fake()->randomElement(SafeNames::FIRST_NAMES);
+            $last = fake()->randomElement(SafeNames::LAST_NAMES);
+            $suffix = fake()->numerify('####');
 
-        foreach ($users as $user) {
-            $user->assignRole(RoleEnum::Client);
+            $user = User::factory()->create([
+                'name' => "$first $last",
+                'email' => Str::lower($first) . '.' . Str::lower($last) . '.' . $suffix . '@example.com',
+            ]);
+
             $this->fillProfile($user);
         }
     }
@@ -150,7 +81,11 @@ class DatabaseSeeder extends Seeder
      */
     private function fillProfile(User $user): void
     {
+        [$first, $last] = explode(' ', $user->name, 2);
+
         $user->profile->update([
+            'first_name' => $first,
+            'last_name' => $last ?? '',
             'phone' => fake()->phoneNumber(),
             'address' => fake()->streetAddress(),
             'city' => fake()->city(),

@@ -2,20 +2,20 @@
 
 namespace App\Http\Controllers\API\Auth;
 
-use App\Enums\Role;
 use App\Http\Controllers\API\ApiController;
 use App\Http\Requests\API\Auth\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class RegisterController extends ApiController
 {
     /**
      * User Registration
      *
-     * Register a new user account and return an API token. New users are automatically assigned the 'client' role.
+     * Register a new user account and return an API token.
      *
      * @unauthenticated
      *
@@ -25,9 +25,7 @@ class RegisterController extends ApiController
      *     "user": {
      *       "id": "1",
      *       "name": "New User",
-     *       "email": "newuser@example.com",
-     *       "roles": ["client"],
-     *       "permissions": ["view-project", "create-project", "update-project"]
+     *       "email": "newuser@example.com"
      *     },
      *     "token": "1|AbCdEf..."
      *   },
@@ -43,23 +41,30 @@ class RegisterController extends ApiController
      */
     public function __invoke(RegisterRequest $request): JsonResponse
     {
+        $firstName = $request->input('first_name');
+        $lastName = $request->input('last_name');
+
+        // Generate unique email from names
+        $suffix = Str::lower(Str::random(4));
+        $email = Str::lower($firstName) . '.' . Str::lower($lastName) . '.' . $suffix . '@example.com';
+
         // Create user
         $user = User::create([
-            'name' => $request->input('name'),
-            'email' => $request->input('email'),
-            'password' => Hash::make($request->input('password')),
+            'name' => "$firstName $lastName",
+            'email' => $email,
+            'password' => Hash::make('password123'),
         ]);
 
-        // Assign default role (client)
-        $user->assignRole(Role::Client->value);
-
-        // Create profile if needed
+        // Create profile with names
         if (! $user->profile) {
-            $user->profile()->create([]);
+            $user->profile()->create([
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+            ]);
         }
 
         // Load relationships for the resource
-        $user->load(['profile', 'roles', 'permissions']);
+        $user->load(['profile']);
 
         // Create API access token
         $token = $user->createToken('api-client')->plainTextToken;

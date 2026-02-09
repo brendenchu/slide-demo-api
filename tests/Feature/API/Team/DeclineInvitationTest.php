@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\Account\InvitationStatus;
+use App\Enums\Account\TeamRole;
 use App\Models\Account\Team;
 use App\Models\Account\TeamInvitation;
 use App\Models\User;
@@ -16,7 +17,8 @@ it('allows user to decline a pending invitation', function (): void {
 
     $team = Team::factory()->create();
     $admin = User::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     $invitation = TeamInvitation::factory()->create([
         'team_id' => $team->id,
@@ -42,7 +44,8 @@ it('rejects decline by wrong email', function (): void {
 
     $team = Team::factory()->create();
     $admin = User::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     $invitation = TeamInvitation::factory()->create([
         'team_id' => $team->id,
@@ -61,7 +64,8 @@ it('returns 404 for already accepted invitation', function (): void {
 
     $team = Team::factory()->create();
     $admin = User::factory()->create();
-    $team->users()->attach($admin->id, ['is_admin' => true]);
+    $team->users()->attach($admin->id);
+    $team->assignTeamRole($admin, TeamRole::Admin);
 
     $invitation = TeamInvitation::factory()->accepted()->create([
         'team_id' => $team->id,
