@@ -19,13 +19,6 @@ class TokenService
     protected Token $token;
 
     /**
-     * Whether to bypass token expiration checks.
-     *
-     * When true, expired tokens will still be considered valid.
-     */
-    protected bool $bypassExpiration = false;
-
-    /**
      * Whether to bypass token revocation checks.
      *
      * When true, revoked tokens will still be considered valid.
@@ -130,20 +123,6 @@ class TokenService
     }
 
     /**
-     * Bypass expiration checks for subsequent token queries.
-     *
-     * Useful for administrative operations or token refresh flows.
-     *
-     * @return self Fluent interface for method chaining
-     */
-    public function bypassExpiration(): self
-    {
-        $this->bypassExpiration = true;
-
-        return $this;
-    }
-
-    /**
      * Bypass revocation checks for subsequent token queries.
      *
      * Useful for token refresh flows or administrative operations.
@@ -176,12 +155,6 @@ class TokenService
         if (! empty($this->token)) {
             $query->where('public_id', $this->token->public_id);
         }
-
-        // Let's ignore expiration of tokens for now
-
-        //        if (! $this->bypassExpiration) {
-        //            $query->where('expires_at', '>', Carbon::now());
-        //        }
 
         if (! $this->bypassRevocation) {
             $query->whereNull('revoked_at');

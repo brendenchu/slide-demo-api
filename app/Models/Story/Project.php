@@ -126,16 +126,4 @@ class Project extends Model
             ->where('expires_at', '>', now())
             ->whereNull('revoked_at');
     }
-
-    /**
-     * Get the project's token for the authenticated user
-     *
-     * @deprecated Use userToken() relationship instead for better performance
-     */
-    public function user_token(): ?string
-    {
-        $token = $this->userToken()->first();
-
-        return $token?->public_id;
-    }
 }

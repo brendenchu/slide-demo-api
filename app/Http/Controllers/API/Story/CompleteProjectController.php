@@ -31,7 +31,7 @@ class CompleteProjectController extends ApiController
             'recipient_id' => $project->user_id,
             'sender_id' => $project->user_id,
             'title' => 'Story form completed',
-            'content' => "Your story \"{$project->title}\" has been completed.",
+            'content' => "Your story \"{$project->label}\" has been completed.",
             'type' => 'story_completed',
             'link' => '/dashboard',
         ]);
