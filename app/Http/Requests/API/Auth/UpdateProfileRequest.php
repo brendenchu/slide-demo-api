@@ -43,9 +43,9 @@ class UpdateProfileRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'first_name.string' => 'First name must be a string',
+            'first_name.string' => 'Please select a valid first name from the list',
             'first_name.in' => 'Please select a valid first name from the list',
-            'last_name.string' => 'Last name must be a string',
+            'last_name.string' => 'Please select a valid last name from the list',
             'last_name.in' => 'Please select a valid last name from the list',
             'email.email' => 'Please provide a valid email address',
             'email.unique' => 'This email address is already in use',
