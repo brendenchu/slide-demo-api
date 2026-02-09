@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Slide Demo API is a RESTful API built with Laravel 12 that provides endpoints for managing stories/projects, users, teams, and authentication. The API uses Bearer token authentication and implements role-based access control (RBAC) for authorization.
+The Slide Demo API is a RESTful API built with Laravel 12 that provides endpoints for managing stories/projects, users, teams, invitations, and notifications. The API uses Bearer token authentication and implements team-based access control for authorization.
 
 **Base URL**: `https://vue-slide-demo.test/api/v1`
 
@@ -68,7 +68,7 @@ Authorization: Bearer 1|AbCdEfGhIjKlMnOpQrStUvWxYz...
 
 - **Creation**: Tokens are created upon successful login or registration
 - **Storage**: Tokens are stored in the `personal_access_tokens` database table
-- **Expiration**: Tokens do not expire by default (configurable in `config/sanctum.php`)
+- **Expiration**: Tokens expire after 1440 minutes (24 hours), configurable via `SANCTUM_EXPIRATION` env var
 - **Revocation**: Tokens are immediately revoked upon logout
 - **Multi-device**: Users can have multiple active tokens (one per device/session)
 
@@ -107,7 +107,8 @@ Authorization: Bearer 1|AbCdEfGhIjKlMnOpQrStUvWxYz...
 
 ### Default Rate Limits
 
-All API endpoints are rate-limited to **60 requests per minute per user**.
+- **Auth endpoints** (login, register): **5 requests per minute**
+- **API endpoints** (all other protected routes): **60 requests per minute per user**
 
 **Rate Limit Headers**:
 ```
@@ -131,29 +132,23 @@ Rate limits can be configured in `bootstrap/app.php` by modifying the throttle m
 
 ## Authorization & Roles
 
-### Available Roles
+### Team Roles
 
-The API implements the following roles:
+The API implements team-based access control with the following roles:
 
-| Role | Description | Key Permissions |
-|------|-------------|-----------------|
-| `super-admin` | Full system access | All permissions |
-| `admin` | Administrative access | User and project management |
-| `consultant` | Project consultant | View and manage projects |
-| `client` | Standard user | View and manage own projects |
-| `guest` | Read-only access | View projects only |
+| Role | Description |
+|------|-------------|
+| `owner` | Team owner with full control. Cannot be assigned via invitation. |
+| `admin` | Team administrator. Can manage members and invitations. |
+| `member` | Standard team member. Can view and contribute to team projects. |
 
-### Permission System
+### Assignable Roles
 
-Permissions are granular and follow the pattern: `{action}-{resource}`
+Only `admin` and `member` roles can be assigned to team members via invitations.
 
-**Examples**:
-- `view-project`, `create-project`, `update-project`, `delete-project`
-- `view-user`, `create-user`, `update-user`, `delete-user`
+### Checking User Info
 
-### Checking Permissions
-
-User permissions are returned in the authentication response:
+User details and roles are returned in the authentication response:
 
 ```json
 {
@@ -205,6 +200,13 @@ User permissions are returned in the authentication response:
 
 ## API Endpoints
 
+### Public
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/demo/status` | Check demo mode status and resource limits |
+| GET | `/api/v1/names` | Get list of safe names |
+
 ### Authentication
 
 | Method | Endpoint | Auth Required | Description |
@@ -214,37 +216,69 @@ User permissions are returned in the authentication response:
 | POST | `/api/v1/auth/logout` | Yes | Logout user |
 | GET | `/api/v1/auth/user` | Yes | Get authenticated user |
 | PUT | `/api/v1/auth/user` | Yes | Update authenticated user |
+| DELETE | `/api/v1/auth/user` | Yes | Delete authenticated user |
 
 ### Projects (Stories)
 
-| Method | Endpoint | Auth Required | Permission | Description |
-|--------|----------|---------------|------------|-------------|
-| GET | `/api/v1/projects` | Yes | `view-project` | List user's projects |
-| GET | `/api/v1/projects/{id}` | Yes | `view-project` | Get single project |
-| POST | `/api/v1/projects` | Yes | `create-project` | Create new project |
-| PUT | `/api/v1/projects/{id}` | Yes | `update-project` | Update project |
-| DELETE | `/api/v1/projects/{id}` | Yes | `delete-project` | Delete project |
-| POST | `/api/v1/projects/{id}/responses` | Yes | `update-project` | Save form responses |
-| POST | `/api/v1/projects/{id}/complete` | Yes | `update-project` | Mark project complete |
-
-### User Management (Admin)
-
-| Method | Endpoint | Auth Required | Permission | Description |
-|--------|----------|---------------|------------|-------------|
-| GET | `/api/v1/admin/users` | Yes | `view-user` | List all users |
-| GET | `/api/v1/admin/users/{id}` | Yes | `view-user` | Get single user |
-| POST | `/api/v1/admin/users` | Yes | `create-user` | Create new user |
-| PUT | `/api/v1/admin/users/{id}` | Yes | `update-user` | Update user |
-| DELETE | `/api/v1/admin/users/{id}` | Yes | `delete-user` | Delete user |
+| Method | Endpoint | Auth Required | Description |
+|--------|----------|---------------|-------------|
+| GET | `/api/v1/projects` | Yes | List user's projects |
+| POST | `/api/v1/projects` | Yes | Create new project |
+| GET | `/api/v1/projects/{id}` | Yes | Get single project |
+| PUT | `/api/v1/projects/{id}` | Yes | Update project |
+| DELETE | `/api/v1/projects/{id}` | Yes | Delete project |
+| POST | `/api/v1/projects/{id}/responses` | Yes | Save form responses |
+| POST | `/api/v1/projects/{id}/complete` | Yes | Mark project complete |
 
 ### Teams
 
-| Method | Endpoint | Auth Required | Permission | Description |
-|--------|----------|---------------|------------|-------------|
-| GET | `/api/v1/teams` | Yes | N/A | List user's teams |
-| GET | `/api/v1/teams/{id}` | Yes | N/A | Get single team |
-| POST | `/api/v1/teams` | Yes | N/A | Create new team |
-| PUT | `/api/v1/teams/{id}` | Yes | N/A | Update team |
+| Method | Endpoint | Auth Required | Description |
+|--------|----------|---------------|-------------|
+| GET | `/api/v1/teams` | Yes | List user's teams |
+| POST | `/api/v1/teams` | Yes | Create new team |
+| POST | `/api/v1/teams/current` | Yes | Set current active team |
+| GET | `/api/v1/teams/{teamId}` | Yes | Get single team |
+| PUT | `/api/v1/teams/{teamId}` | Yes | Update team |
+| DELETE | `/api/v1/teams/{teamId}` | Yes | Delete team |
+
+### Team Members
+
+| Method | Endpoint | Auth Required | Description |
+|--------|----------|---------------|-------------|
+| GET | `/api/v1/teams/{teamId}/members` | Yes | List team members |
+| PUT | `/api/v1/teams/{teamId}/members/{userId}/role` | Yes | Update member role |
+| DELETE | `/api/v1/teams/{teamId}/members/{userId}` | Yes | Remove member from team |
+| POST | `/api/v1/teams/{teamId}/transfer-ownership` | Yes | Transfer team ownership |
+
+### Team Invitations
+
+| Method | Endpoint | Auth Required | Description |
+|--------|----------|---------------|-------------|
+| GET | `/api/v1/teams/{teamId}/invitations` | Yes | List team invitations |
+| POST | `/api/v1/teams/{teamId}/invitations` | Yes | Create invitation |
+| DELETE | `/api/v1/teams/{teamId}/invitations/{invitationId}` | Yes | Delete invitation |
+
+### User Invitations
+
+| Method | Endpoint | Auth Required | Description |
+|--------|----------|---------------|-------------|
+| GET | `/api/v1/invitations` | Yes | List user's pending invitations |
+| POST | `/api/v1/invitations/{invitationId}/accept` | Yes | Accept team invitation |
+| POST | `/api/v1/invitations/{invitationId}/decline` | Yes | Decline team invitation |
+
+### Notifications
+
+| Method | Endpoint | Auth Required | Description |
+|--------|----------|---------------|-------------|
+| GET | `/api/v1/notifications` | Yes | List user's notifications |
+| POST | `/api/v1/notifications/read-all` | Yes | Mark all notifications as read |
+| POST | `/api/v1/notifications/{id}/read` | Yes | Mark single notification as read |
+
+### Users
+
+| Method | Endpoint | Auth Required | Description |
+|--------|----------|---------------|-------------|
+| GET | `/api/v1/users/search` | Yes | Search users by name/email (for team invitations) |
 
 ## Common Request Examples
 
@@ -312,6 +346,65 @@ curl -X GET https://vue-slide-demo.test/api/v1/projects \
   ],
   "message": "Projects retrieved successfully"
 }
+```
+
+### Creating a Team
+
+```bash
+curl -X POST https://vue-slide-demo.test/api/v1/teams \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "My Team"
+  }'
+```
+
+### Inviting a Team Member
+
+```bash
+curl -X POST https://vue-slide-demo.test/api/v1/teams/{teamId}/invitations \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "colleague@example.com",
+    "role": "member"
+  }'
+```
+
+### Transferring Team Ownership
+
+```bash
+curl -X POST https://vue-slide-demo.test/api/v1/teams/{teamId}/transfer-ownership \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_id": 5
+  }'
+```
+
+### Setting Current Team
+
+```bash
+curl -X POST https://vue-slide-demo.test/api/v1/teams/current \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "team_id": 1
+  }'
+```
+
+### Listing Notifications
+
+```bash
+curl -X GET https://vue-slide-demo.test/api/v1/notifications \
+  -H "Authorization: Bearer {token}"
+```
+
+### Searching Users
+
+```bash
+curl -X GET "https://vue-slide-demo.test/api/v1/users/search?q=john" \
+  -H "Authorization: Bearer {token}"
 ```
 
 ## Error Handling
@@ -383,13 +476,26 @@ The API accepts requests from the following origins:
 
 - Credentials are supported (cookies, authorization headers)
 
+## Demo Mode
+
+When `DEMO_MODE=true` is set, the API enforces resource limits:
+
+| Resource | Default Limit |
+|----------|---------------|
+| Max users | 25 |
+| Max teams per user | 3 |
+| Max projects per team | 5 |
+| Max invitations per team | 5 |
+
+Demo accounts are protected from deletion/modification by the `protect_demo_account` middleware.
+
 ## Testing the API
 
 ### Using cURL
 
 ```bash
 # Login
-TOKEN=$(curl -X POST https://vue-slide-demo.test/api/v1/auth/login \
+TOKEN=$(curl -s -X POST https://vue-slide-demo.test/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"client@demo.com","password":"password"}' \
   | jq -r '.data.token')
@@ -399,24 +505,17 @@ curl -X GET https://vue-slide-demo.test/api/v1/projects \
   -H "Authorization: Bearer $TOKEN"
 ```
 
-### Using Postman
-
-1. Import the Postman collection from `docs/api/vue-slide-demo.postman_collection.json`
-2. Set the `{{baseUrl}}` variable to `https://vue-slide-demo.test/api/v1`
-3. Login to obtain a token
-4. Set the `{{token}}` variable with the returned token
-5. Test endpoints using the collection
-
 ### Demo Accounts
 
-The following demo accounts are seeded in the development database:
+All demo accounts use the password `password`.
 
-| Email | Password | Role | Description |
-|-------|----------|------|-------------|
-| `client@demo.com` | `password` | Client | Standard user account |
-| `admin@demo.com` | `password` | Super Admin | Full administrative access |
-| `consultant@example.com` | `password` | Consultant | Consultant account |
-| `guest@demo.com` | `password` | Guest | Read-only access |
+| Email | Role | Description |
+|-------|------|-------------|
+| `admin@demo.com` | Super Admin | Full administrative access |
+| `admin@example.com` | Admin | Administrative access |
+| `consultant@example.com` | Consultant | Consultant account |
+| `client@demo.com` | Client | Standard user account |
+| `guest@demo.com` | Guest | Read-only access |
 
 ## Additional Resources
 
@@ -435,6 +534,6 @@ For questions or issues regarding the API:
 
 ---
 
-**Last Updated**: January 11, 2026
+**Last Updated**: February 9, 2026
 **API Version**: 1.0.0
-**Laravel Version**: 12.46.0
+**Laravel Version**: 12.50.0

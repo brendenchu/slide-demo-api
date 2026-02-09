@@ -8,10 +8,10 @@ This directory contains comprehensive documentation for the Slide Demo API.
 **File**: `API_DOCUMENTATION.md`
 
 A comprehensive guide covering:
-- Authentication (Bearer tokens via Laravel Sanctum)
-- Rate limiting (60 requests/minute)
-- Authorization & roles
-- Complete endpoint reference
+- Authentication (Bearer tokens via Laravel Sanctum, 24-hour expiry)
+- Rate limiting (5 req/min auth, 60 req/min API)
+- Team-based access control
+- Complete endpoint reference (36 routes)
 - Request/response examples
 - Error handling
 - CORS configuration
@@ -61,26 +61,27 @@ curl -X GET https://vue-slide-demo.test/api/v1/projects \
 ### 3. Import OpenAPI Spec
 ```bash
 # Use with Postman
-# File → Import → Upload openapi.json
+# File -> Import -> Upload openapi.json
 
 # Or use with other tools that support OpenAPI 3.1
 ```
 
 ## Demo Credentials
 
-Use these credentials to test the API:
+All demo accounts use the password `password`.
 
-| Email | Password | Role | Permissions |
-|-------|----------|------|-------------|
-| `client@demo.com` | `password` | Client | Create and manage own projects |
-| `admin@demo.com` | `password` | Super Admin | Full system access |
-| `consultant@example.com` | `password` | Consultant | View and manage projects |
-| `guest@demo.com` | `password` | Guest | Read-only access |
+| Email | Role |
+|-------|------|
+| `admin@demo.com` | Super Admin - Full system access |
+| `admin@example.com` | Admin - Administrative access |
+| `consultant@example.com` | Consultant - View and manage projects |
+| `client@demo.com` | Client - Create and manage own projects |
+| `guest@demo.com` | Guest - Read-only access |
 
 ## Base URLs
 
 - **Development**: `https://vue-slide-demo.test/api/v1`
-- **Production**: Configure via `FRONTEND_URL` environment variable
+- **Production**: Configure via `APP_URL` environment variable
 
 ## Authentication
 
@@ -95,9 +96,12 @@ Get a token by:
 2. POST to `/api/v1/auth/register` to create new account
 3. Extract the `token` from the response
 
+Tokens expire after 24 hours (configurable via `SANCTUM_EXPIRATION`).
+
 ## Rate Limiting
 
-- **Limit**: 60 requests per minute per user
+- **Auth endpoints**: 5 requests per minute
+- **API endpoints**: 60 requests per minute per user
 - **Headers**:
   - `X-RateLimit-Limit`: Total allowed
   - `X-RateLimit-Remaining`: Requests remaining
@@ -105,15 +109,17 @@ Get a token by:
 
 ## Key Features
 
-- ✅ RESTful API design
-- ✅ Token-based authentication (Sanctum)
-- ✅ Role-based access control (RBAC)
-- ✅ Rate limiting
-- ✅ Comprehensive validation
-- ✅ Standardized error responses
-- ✅ OpenAPI 3.1.0 specification
-- ✅ Interactive documentation
-- ✅ 100% test coverage (323 tests passing)
+- RESTful API design
+- Token-based authentication (Sanctum, 24-hour expiry)
+- Team-based access control (owner, admin, member roles)
+- Team management with invitations and ownership transfer
+- In-app notification system
+- Rate limiting
+- Comprehensive validation
+- Standardized error responses
+- OpenAPI 3.1.0 specification
+- Interactive documentation
+- 326 tests passing (1052 assertions)
 
 ## Additional Resources
 
@@ -132,4 +138,4 @@ For questions or issues:
 
 ---
 
-**Last Updated**: January 11, 2026
+**Last Updated**: February 9, 2026
