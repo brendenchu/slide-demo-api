@@ -26,6 +26,7 @@ class UserResource extends JsonResource
             'email_verified_at' => $this->email_verified_at,
             'name' => $this->name,
             'team' => $this->when($this->relationLoaded('teams'), fn () => TeamResource::make($this->currentTeam())),
+            'must_accept_terms' => ! $this->hasAcceptedCurrentTerms(),
         ];
     }
 }
