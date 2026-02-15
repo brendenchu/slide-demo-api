@@ -195,6 +195,7 @@ it('can update profile with only email', function (): void {
 
 it('validates email format when updating', function (): void {
     $user = User::factory()->create();
+
     Sanctum::actingAs($user);
 
     $response = $this->putJson('/api/v1/auth/user', [
@@ -222,6 +223,7 @@ it('validates email uniqueness when updating', function (): void {
 it('allows user to keep their own email when updating', function (): void {
     $firstName = SafeNames::FIRST_NAMES[20];
     $user = User::factory()->create(['email' => 'user@example.com']);
+
     Sanctum::actingAs($user);
 
     $response = $this->putJson('/api/v1/auth/user', [
@@ -234,6 +236,7 @@ it('allows user to keep their own email when updating', function (): void {
 
 it('rejects first names not in the safe list when updating', function (): void {
     $user = User::factory()->create();
+
     Sanctum::actingAs($user);
 
     $response = $this->putJson('/api/v1/auth/user', [
@@ -246,6 +249,7 @@ it('rejects first names not in the safe list when updating', function (): void {
 
 it('rejects last names not in the safe list when updating', function (): void {
     $user = User::factory()->create();
+
     Sanctum::actingAs($user);
 
     $response = $this->putJson('/api/v1/auth/user', [
@@ -258,6 +262,7 @@ it('rejects last names not in the safe list when updating', function (): void {
 
 it('validates email max length when updating', function (): void {
     $user = User::factory()->create();
+
     Sanctum::actingAs($user);
 
     $response = $this->putJson('/api/v1/auth/user', [
@@ -289,4 +294,39 @@ it('allows empty update request', function (): void {
     $response->assertSuccessful();
     expect($user->fresh()->name)->toBe('Original Name');
     expect($user->fresh()->email)->toBe('original@example.com');
+});
+
+// --- Terms Acceptance Status in User Response ---
+
+it('returns must_accept_terms true when user has not accepted terms', function (): void {
+    $user = User::factory()->create();
+    $user->terms_agreements()->delete();
+    Sanctum::actingAs($user);
+
+    $response = $this->getJson('/api/v1/auth/user');
+
+    $response->assertSuccessful()
+        ->assertJson([
+            'data' => [
+                'user' => [
+                    'must_accept_terms' => true,
+                ],
+            ],
+        ]);
+});
+
+it('returns must_accept_terms false when user has accepted terms', function (): void {
+    $user = User::factory()->create();
+    Sanctum::actingAs($user);
+
+    $response = $this->getJson('/api/v1/auth/user');
+
+    $response->assertSuccessful()
+        ->assertJson([
+            'data' => [
+                'user' => [
+                    'must_accept_terms' => false,
+                ],
+            ],
+        ]);
 });

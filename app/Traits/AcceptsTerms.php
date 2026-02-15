@@ -26,4 +26,15 @@ trait AcceptsTerms
     {
         return $this->morphMany(Violation::class, 'accountable');
     }
+
+    /**
+     * Determine if the user has accepted the current terms version.
+     */
+    public function hasAcceptedCurrentTerms(): bool
+    {
+        return $this->terms_agreements()
+            ->where('terms_version_id', config('terms.current_version'))
+            ->whereNotNull('accepted_at')
+            ->exists();
+    }
 }

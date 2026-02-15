@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Account\Terms\Agreement;
 use App\Models\User;
 use App\Support\SafeNames;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -17,6 +18,19 @@ class UserFactory extends Factory
      * The current password being used by the factory.
      */
     protected static ?string $password;
+
+    /**
+     * Configure the model factory.
+     */
+    public function configure(): static
+    {
+        return $this->afterCreating(function (User $user): void {
+            Agreement::factory()->create([
+                'accountable_id' => $user->id,
+                'accountable_type' => $user->getMorphClass(),
+            ]);
+        });
+    }
 
     /**
      * Define the model's default state.
