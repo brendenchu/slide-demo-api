@@ -8,10 +8,10 @@ This directory contains comprehensive documentation for the Slide Demo API.
 **File**: `API_DOCUMENTATION.md`
 
 A comprehensive guide covering:
-- Authentication (Bearer tokens via Laravel Sanctum, 24-hour expiry)
-- Rate limiting (5 req/min auth, 60 req/min API)
-- Team-based access control
-- Complete endpoint reference (36 routes)
+- Authentication (Bearer tokens via Laravel Sanctum)
+- Rate limiting (60 requests/minute)
+- Authorization & roles
+- Complete endpoint reference
 - Request/response examples
 - Error handling
 - CORS configuration
@@ -61,27 +61,37 @@ curl -X GET https://vue-slide-demo.test/api/v1/projects \
 ### 3. Import OpenAPI Spec
 ```bash
 # Use with Postman
-# File -> Import -> Upload openapi.json
+# File → Import → Upload openapi.json
 
 # Or use with other tools that support OpenAPI 3.1
 ```
 
 ## Demo Credentials
 
-All demo accounts use the password `password`.
+Use these credentials to test the API:
 
-| Email | Role |
-|-------|------|
-| `admin@demo.com` | Super Admin - Full system access |
-| `admin@example.com` | Admin - Administrative access |
-| `consultant@example.com` | Consultant - View and manage projects |
-| `client@demo.com` | Client - Create and manage own projects |
-| `guest@demo.com` | Guest - Read-only access |
+| Email | Password | Role | Permissions |
+|-------|----------|------|-------------|
+| `client@demo.com` | `password` | Client | Create and manage own projects |
+| `admin@demo.com` | `password` | Super Admin | Full system access |
+| `consultant@example.com` | `password` | Consultant | View and manage projects |
+| `guest@demo.com` | `password` | Guest | Read-only access |
 
 ## Base URLs
 
 - **Development**: `https://vue-slide-demo.test/api/v1`
-- **Production**: Configure via `APP_URL` environment variable
+- **Production**: Configure via `FRONTEND_URL` environment variable
+
+## Terms of Service Acceptance
+
+After authentication, users must accept the current terms of service before accessing most API endpoints. Endpoints protected by the `ensure_terms_accepted` middleware return a `403` with `must_accept_terms: true` until the user accepts.
+
+Exempt from the terms requirement: login, register, logout, get current user, and the terms endpoints themselves.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/terms` | Get current terms info and user acceptance status |
+| POST | `/api/v1/terms/accept` | Accept the current terms (body: `{"accepted": true}`) |
 
 ## Authentication
 
@@ -96,12 +106,9 @@ Get a token by:
 2. POST to `/api/v1/auth/register` to create new account
 3. Extract the `token` from the response
 
-Tokens expire after 24 hours (configurable via `SANCTUM_EXPIRATION`).
-
 ## Rate Limiting
 
-- **Auth endpoints**: 5 requests per minute
-- **API endpoints**: 60 requests per minute per user
+- **Limit**: 60 requests per minute per user
 - **Headers**:
   - `X-RateLimit-Limit`: Total allowed
   - `X-RateLimit-Remaining`: Requests remaining
@@ -109,17 +116,15 @@ Tokens expire after 24 hours (configurable via `SANCTUM_EXPIRATION`).
 
 ## Key Features
 
-- RESTful API design
-- Token-based authentication (Sanctum, 24-hour expiry)
-- Team-based access control (owner, admin, member roles)
-- Team management with invitations and ownership transfer
-- In-app notification system
-- Rate limiting
-- Comprehensive validation
-- Standardized error responses
-- OpenAPI 3.1.0 specification
-- Interactive documentation
-- 326 tests passing (1052 assertions)
+- ✅ RESTful API design
+- ✅ Token-based authentication (Sanctum)
+- ✅ Role-based access control (RBAC)
+- ✅ Terms of service acceptance enforcement
+- ✅ Rate limiting
+- ✅ Comprehensive validation
+- ✅ Standardized error responses
+- ✅ OpenAPI 3.1.0 specification
+- ✅ Interactive documentation
 
 ## Additional Resources
 
@@ -138,4 +143,4 @@ For questions or issues:
 
 ---
 
-**Last Updated**: February 9, 2026
+**Last Updated**: February 16, 2026

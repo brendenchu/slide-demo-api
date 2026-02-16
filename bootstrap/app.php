@@ -21,6 +21,9 @@ return Application::configure(basePath: dirname(__DIR__))
             // Demo mode middleware
             'demo_limit' => \App\Http\Middleware\DemoModeLimit::class,
             'protect_demo_account' => \App\Http\Middleware\ProtectDemoAccount::class,
+
+            // Terms acceptance middleware
+            'ensure_terms_accepted' => \App\Http\Middleware\EnsureTermsAccepted::class,
         ]);
 
         // Configure API CORS and Security Headers
