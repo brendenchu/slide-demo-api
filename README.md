@@ -1,21 +1,23 @@
 # Slide Form Demo
 
-A Laravel 12 REST API demonstrating multi-step form workflows with role-based access control and token authentication.
+A Laravel 12 REST API demonstrating multi-step form workflows with team-based access control and token authentication.
 
 ## Overview
 
-Laravel backend providing a RESTful API for client applications. Implements domain-driven architecture with user management, project workflows, and team collaboration.
+Laravel backend providing a RESTful API for client applications. Implements domain-driven architecture with user management, project workflows, team collaboration, invitations, and notifications.
 
 ## Features
 
-- RESTful API with Laravel Sanctum token authentication
+- RESTful API with Laravel Sanctum token authentication (24-hour expiry)
 - Frontend agnostic - supports any client framework
 - Multi-step form workflow system
-- Role-based access control (5 roles: Guest, Client, Consultant, Admin, Super Admin)
+- Team-based access control (owner, admin, member roles)
 - Domain-driven architecture
 - Incremental form saving
-- Team ownership and ownership transfer
-- 416 backend tests with 100% API endpoint coverage
+- Team management with invitations and ownership transfer
+- In-app notification system
+- Demo mode with configurable resource limits
+- 326 backend tests with full API endpoint coverage
 
 ## Tech Stack
 
@@ -24,7 +26,8 @@ Laravel backend providing a RESTful API for client applications. Implements doma
 - Spatie Laravel Permission
 - Pest v3
 - Scramble (OpenAPI 3.1.0)
-- MySQL/PostgreSQL/SQLite
+- Rector
+- SQLite (default, supports MySQL/PostgreSQL)
 
 ## Installation
 
@@ -56,14 +59,14 @@ app/
 ├── Enums/                  # Domain-specific enums
 ├── Http/
 │   ├── Controllers/API/    # REST API controllers (domain-organized)
-│   ├── Middleware/         # SecurityHeaders, CORS
+│   ├── Middleware/          # SecurityHeaders, CORS, DemoProtection
 │   ├── Requests/           # Form validation classes
 │   └── Resources/          # API resource transformers
 ├── Models/                 # Domain-organized Eloquent models
 └── Services/               # Business logic layer
 
 routes/
-└── api.php                 # REST API routes
+└── api.php                 # REST API routes (v1 prefixed)
 
 tests/
 ├── Feature/API/            # API integration tests
@@ -74,12 +77,104 @@ tests/
 
 Code organized by business domain:
 
-- **Account** - User profiles, teams, subscriptions, terms
-- **Story** - Project workflow, forms, responses, tokens
-- **Admin** - Administrative functions, user management
-- **Auth** - Authentication and user profile management
+- **Auth** - Authentication, registration, user profile management
+- **Story** - Project workflows, forms, responses, completion
+- **Team** - Team CRUD, members, invitations, ownership transfer, user search
+- **Notifications** - In-app notifications with read tracking
+- **Demo** - Demo status and safe names endpoints
 
 Core entities (User, Role, Permission) at root level.
+
+## API Endpoints
+
+All API routes are prefixed with `/api/v1`.
+
+### Public
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/demo/status` | Check demo mode status |
+| GET | `/names` | Get safe names list |
+
+### Authentication (rate limit: 5/min)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/auth/login` | Login user |
+| POST | `/auth/register` | Register new user |
+
+### Protected (rate limit: 60/min, requires Bearer token)
+
+#### Auth User
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/auth/logout` | Logout user |
+| GET | `/auth/user` | Get authenticated user |
+| PUT | `/auth/user` | Update authenticated user |
+| DELETE | `/auth/user` | Delete authenticated user |
+
+#### Projects
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/projects` | List user's projects |
+| POST | `/projects` | Create new project |
+| GET | `/projects/{id}` | Get single project |
+| PUT | `/projects/{id}` | Update project |
+| DELETE | `/projects/{id}` | Delete project |
+| POST | `/projects/{id}/responses` | Save form responses |
+| POST | `/projects/{id}/complete` | Mark project complete |
+
+#### Teams
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/teams` | List user's teams |
+| POST | `/teams` | Create new team |
+| POST | `/teams/current` | Set current team |
+| GET | `/teams/{teamId}` | Get single team |
+| PUT | `/teams/{teamId}` | Update team |
+| DELETE | `/teams/{teamId}` | Delete team |
+
+#### Team Members
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/teams/{teamId}/members` | List team members |
+| PUT | `/teams/{teamId}/members/{userId}/role` | Update member role |
+| DELETE | `/teams/{teamId}/members/{userId}` | Remove member |
+| POST | `/teams/{teamId}/transfer-ownership` | Transfer team ownership |
+
+#### Team Invitations
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/teams/{teamId}/invitations` | List team invitations |
+| POST | `/teams/{teamId}/invitations` | Create invitation |
+| DELETE | `/teams/{teamId}/invitations/{id}` | Delete invitation |
+
+#### User Invitations
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/invitations` | List user's pending invitations |
+| POST | `/invitations/{id}/accept` | Accept invitation |
+| POST | `/invitations/{id}/decline` | Decline invitation |
+
+#### Notifications
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/notifications` | List user's notifications |
+| POST | `/notifications/read-all` | Mark all as read |
+| POST | `/notifications/{id}/read` | Mark single as read |
+
+#### Users
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/users/search` | Search users (for team invitations) |
 
 ## API Documentation
 
@@ -99,26 +194,26 @@ OpenAPI 3.1.0 specification:
 php artisan test
 ```
 
-416 tests, 1277 assertions:
-- API Endpoints: 100%
-- Authentication & Authorization: 100%
-- User Management: 59 tests
-- Projects/Stories: 69 tests
-- Teams: 119 tests (members, invitations, ownership transfer)
-- Rate Limiting: 4 tests
-- Security Headers: 5 tests
+326 tests, 1052 assertions:
+- Authentication & Authorization
+- Projects/Stories CRUD and form workflows
+- Teams: CRUD, members, invitations, ownership transfer
+- Notifications
+- Rate Limiting
+- Security Headers
 
 ## Security
 
-- Token-based authentication (Sanctum)
+- Token-based authentication (Sanctum, 24-hour expiry)
 - Security headers (CSP, X-Frame-Options, etc.)
-- Role-based access control
+- Team-based access control
 - Permission-based authorization
 - Password hashing (bcrypt)
 - Mass assignment protection
 - Rate limiting (5 req/min auth, 60 req/min API)
 - Form Request validation
 - SQL injection prevention (Eloquent ORM)
+- Demo account protection middleware
 
 ## Development
 
@@ -143,13 +238,21 @@ php artisan scramble:export
 
 ## Demo Accounts
 
-| Role        | Email                   | Password    |
-| ----------- | ----------------------- | ----------- |
-| Guest       | guest@example.com       | guest       |
-| Client      | client@example.com      | client      |
-| Consultant  | consultant@example.com  | consultant  |
-| Admin       | admin@example.com       | admin       |
-| Super Admin | super-admin@example.com | super-admin |
+All demo accounts use the password `password`.
+
+| Role    | Email                    |
+|---------|--------------------------|
+| Super Admin | admin@demo.com       |
+| Admin   | admin@example.com        |
+| Consultant | consultant@example.com |
+| Client  | client@demo.com          |
+| Guest   | guest@demo.com           |
+
+Demo mode resource limits (configurable via `.env`):
+- Max users: 25
+- Max teams per user: 3
+- Max projects per team: 5
+- Max invitations per team: 5
 
 ## Environment Configuration
 
@@ -157,15 +260,14 @@ php artisan scramble:export
 APP_ENV=production
 APP_DEBUG=false
 APP_URL=https://api.your-domain.com
+APP_TIMEZONE=America/Vancouver
 
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_DATABASE=your_database
-DB_USERNAME=your_username
-DB_PASSWORD=your_password
+DB_CONNECTION=sqlite
 
 FRONTEND_URL=https://app.your-domain.com
 SANCTUM_EXPIRATION=1440
+
+DEMO_MODE=false
 ```
 
 ## Deployment
@@ -179,7 +281,7 @@ Supported platforms:
 ## Contributing
 
 1. Follow domain-driven architecture patterns
-2. Maintain 100% API endpoint test coverage
+2. Maintain full API endpoint test coverage
 3. Use Form Request classes for validation
 4. Use Resource classes for API responses
 5. Keep controllers thin, use services for business logic
@@ -188,4 +290,4 @@ Supported platforms:
 
 ## License
 
-Demonstration project for educational purposes.
+MIT
