@@ -1,4 +1,4 @@
-# Slide Form Demo
+# Slide Form Demo API
 
 A Laravel 12 REST API demonstrating multi-step form workflows with team-based access control and token authentication.
 
