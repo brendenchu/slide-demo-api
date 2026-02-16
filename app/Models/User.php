@@ -17,14 +17,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use AcceptsTerms, HasApiTokens, HasFactory, HasRoles, HasSettings, Notifiable;
+    use AcceptsTerms, HasApiTokens, HasFactory, HasRoles, HasSettings;
 
     /**
      * The attributes that are mass assignable.
