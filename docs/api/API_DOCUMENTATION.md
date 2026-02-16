@@ -496,7 +496,7 @@ The API accepts requests from the following origins:
 # Login
 TOKEN=$(curl -X POST https://vue-slide-demo.test/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"client@demo.com","password":"password"}' \
+  -d '{"email":"demo@example.com","password":"password"}' \
   | jq -r '.data.token')
 
 # Use token for authenticated request
@@ -514,14 +514,15 @@ curl -X GET https://vue-slide-demo.test/api/v1/projects \
 
 ### Demo Accounts
 
-The following demo accounts are seeded in the development database:
+The following accounts are seeded in the development database:
 
-| Email | Password | Role | Description |
-|-------|----------|------|-------------|
-| `client@demo.com` | `password` | Client | Standard user account |
-| `admin@demo.com` | `password` | Super Admin | Full administrative access |
-| `consultant@example.com` | `password` | Consultant | Consultant account |
-| `guest@demo.com` | `password` | Guest | Read-only access |
+| Email | Password | Description |
+|-------|----------|-------------|
+| `demo@example.com` | `password` | Primary demo user |
+
+10 additional dummy users (`@example.com`) are seeded for team collaboration and invitation demos. All use the password `password`.
+
+When demo mode is enabled, a daily reset (`demo:reset`) cleans visitor-created accounts, resets the demo user's credentials, and re-seeds all demo content. The demo user and dummy users are preserved across resets.
 
 ## Additional Resources
 

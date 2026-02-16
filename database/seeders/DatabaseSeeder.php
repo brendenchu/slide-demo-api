@@ -74,13 +74,17 @@ class DatabaseSeeder extends Seeder
             $last = $lastNames[$i % count($lastNames)];
             $suffix = str_pad((string) ($i * 1111), 4, '0', STR_PAD_LEFT);
 
-            $user = User::create([
-                'name' => "$first $last",
-                'email' => Str::lower($first) . '.' . Str::lower($last) . '.' . $suffix . '@example.com',
-                'password' => bcrypt('password'),
-                'email_verified_at' => now(),
-                'remember_token' => Str::random(10),
-            ]);
+            $email = Str::lower($first) . '.' . Str::lower($last) . '.' . $suffix . '@example.com';
+
+            $user = User::updateOrCreate(
+                ['email' => $email],
+                [
+                    'name' => "$first $last",
+                    'password' => bcrypt('password'),
+                    'email_verified_at' => now(),
+                    'remember_token' => Str::random(10),
+                ],
+            );
 
             $this->fillProfile($user);
         }

@@ -50,7 +50,7 @@ open https://vue-slide-demo.test/docs/api
 # Login and save token
 TOKEN=$(curl -s -X POST https://vue-slide-demo.test/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"client@demo.com","password":"password"}' \
+  -d '{"email":"demo@example.com","password":"password"}' \
   | jq -r '.data.token')
 
 # Make authenticated request
@@ -70,12 +70,13 @@ curl -X GET https://vue-slide-demo.test/api/v1/projects \
 
 Use these credentials to test the API:
 
-| Email | Password | Role | Permissions |
-|-------|----------|------|-------------|
-| `client@demo.com` | `password` | Client | Create and manage own projects |
-| `admin@demo.com` | `password` | Super Admin | Full system access |
-| `consultant@example.com` | `password` | Consultant | View and manage projects |
-| `guest@demo.com` | `password` | Guest | Read-only access |
+| Email | Password | Description |
+|-------|----------|-------------|
+| `demo@example.com` | `password` | Primary demo user |
+
+10 additional dummy users (`@example.com`) are seeded for team collaboration and invitation demos. All use the password `password`.
+
+When demo mode is enabled, a daily reset (`demo:reset`) cleans visitor accounts and re-seeds demo content.
 
 ## Base URLs
 

@@ -1,4 +1,4 @@
-# Slide Form Demo
+# Slide Form Demo API
 
 A Laravel 12 REST API demonstrating multi-step form workflows with team-based access control and token authentication.
 
@@ -17,7 +17,7 @@ Laravel backend providing a RESTful API for client applications. Implements doma
 - Team management with invitations and ownership transfer
 - In-app notification system
 - Demo mode with configurable resource limits
-- 326 backend tests with full API endpoint coverage
+- 353 backend tests with full API endpoint coverage
 
 ## Tech Stack
 
@@ -194,7 +194,7 @@ OpenAPI 3.1.0 specification:
 php artisan test
 ```
 
-326 tests, 1052 assertions:
+353 tests, 1112 assertions:
 - Authentication & Authorization
 - Projects/Stories CRUD and form workflows
 - Teams: CRUD, members, invitations, ownership transfer
@@ -232,23 +232,42 @@ php artisan migrate
 php artisan migrate:fresh --seed
 php artisan db:seed
 
+# Demo reset (full cleanup + re-seed)
+php artisan demo:reset
+
 # API documentation
 php artisan scramble:export
 ```
 
-## Demo Accounts
+## Demo Mode
 
-All demo accounts use the password `password`.
+When `DEMO_MODE=true`, the application runs in demo mode with a pre-seeded demo user and 10 dummy users.
 
-| Role    | Email                    |
-|---------|--------------------------|
-| Super Admin | admin@demo.com       |
-| Admin   | admin@example.com        |
-| Consultant | consultant@example.com |
-| Client  | client@demo.com          |
-| Guest   | guest@demo.com           |
+### Demo Credentials
 
-Demo mode resource limits (configurable via `.env`):
+| Email | Password | Description |
+|-------|----------|-------------|
+| `demo@example.com` | `password` | Primary demo user |
+
+10 additional dummy users (`@example.com`) are seeded for team collaboration and invitation demos.
+
+### Daily Reset
+
+When demo mode is enabled, `demo:reset` runs daily (America/Vancouver timezone) via the Laravel scheduler. The reset:
+
+1. Deletes visitor-created users (anyone who registered during the demo)
+2. Cleans all seeded content (non-personal teams, projects, notifications, tokens, terms)
+3. Removes orphaned teams
+4. Resets the demo user's credentials and profile to defaults
+5. Re-seeds the full database via `DatabaseSeeder` (roles, demo user, dummy users, demo content)
+
+The demo user and dummy users are preserved across resets — only visitor accounts are removed.
+
+Run manually: `php artisan demo:reset`
+
+### Resource Limits
+
+Configurable via `.env`:
 - Max users: 25
 - Max teams per user: 3
 - Max projects per team: 5
@@ -268,6 +287,9 @@ FRONTEND_URL=https://app.your-domain.com
 SANCTUM_EXPIRATION=1440
 
 DEMO_MODE=false
+
+# Demo reset schedule (requires scheduler running)
+# Resets daily at midnight America/Vancouver when DEMO_MODE=true
 ```
 
 ## Deployment

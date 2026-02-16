@@ -3,11 +3,12 @@
 namespace App\Console\Commands;
 
 use App\Models\Account\Team;
-use App\Models\Account\TeamInvitation;
 use App\Models\Notification;
 use App\Models\Story\Project;
 use App\Models\User;
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class DemoResetCommand extends Command
 {
@@ -45,10 +46,18 @@ class DemoResetCommand extends Command
         }
 
         $this->components->info('Resetting demo data...');
-        $this->cleanDemoData($demoUser);
+
+        $visitorIds = User::where('id', '!=', $demoUser->id)
+            ->where('email', 'not like', '%@example.com')
+            ->pluck('id');
+
+        $this->deleteVisitorUsers($visitorIds);
+        $this->cleanSeededContent($demoUser);
+        $this->cleanOrphanedTeams();
+        $this->resetDemoUser($demoUser);
 
         $this->components->info('Re-seeding demo data...');
-        $this->call('db:seed', ['--class' => 'Database\\Seeders\\DemoSeeder']);
+        $this->call('db:seed', ['--class' => 'Database\\Seeders\\DatabaseSeeder']);
 
         $this->components->info('Demo reset complete.');
 
@@ -56,10 +65,59 @@ class DemoResetCommand extends Command
     }
 
     /**
-     * Remove all demo-specific data for the given user.
+     * Delete visitor-created users and their non-cascading related data.
+     *
+     * DB cascades handle: profiles, users_teams, projects, teams_projects,
+     * team_invitations (invited_by). These tables lack FK cascades and need
+     * manual cleanup: personal_access_tokens, account_terms_agreements,
+     * model_has_roles.
+     *
+     * @param  Collection<int, int>  $userIds
      */
-    private function cleanDemoData(User $demoUser): void
+    private function deleteVisitorUsers(Collection $userIds): void
     {
+        if ($userIds->isEmpty()) {
+            return;
+        }
+
+        $this->components->task('Cleaning visitor Sanctum tokens', function () use ($userIds): void {
+            PersonalAccessToken::where('tokenable_type', User::class)
+                ->whereIn('tokenable_id', $userIds)
+                ->delete();
+        });
+
+        $this->components->task('Cleaning visitor terms agreements', function () use ($userIds): void {
+            \DB::table('account_terms_agreements')
+                ->where('accountable_type', User::class)
+                ->whereIn('accountable_id', $userIds)
+                ->delete();
+        });
+
+        $this->components->task('Cleaning visitor role assignments', function () use ($userIds): void {
+            \DB::table('model_has_roles')
+                ->where('model_type', User::class)
+                ->whereIn('model_id', $userIds)
+                ->delete();
+        });
+
+        $this->components->task('Deleting visitor users', function () use ($userIds): void {
+            User::whereIn('id', $userIds)->each(fn (User $user) => $user->delete());
+        });
+    }
+
+    /**
+     * Remove all seeded and transient content before re-seeding.
+     *
+     * Deletes non-personal teams (cascades: users_teams pivot, teams_projects,
+     * team_invitations), demo projects, all notifications, and demo user tokens
+     * and terms agreements.
+     */
+    private function cleanSeededContent(User $demoUser): void
+    {
+        $this->components->task('Deleting non-personal teams', function (): void {
+            Team::where('is_personal', false)->delete();
+        });
+
         $this->components->task('Deleting demo projects', function () use ($demoUser): void {
             Project::where('user_id', $demoUser->id)->each(function (Project $project): void {
                 $project->teams()->detach();
@@ -67,37 +125,46 @@ class DemoResetCommand extends Command
             });
         });
 
-        $this->components->task('Deleting demo notifications', function () use ($demoUser): void {
-            Notification::where('recipient_id', $demoUser->id)->delete();
+        $this->components->task('Deleting all notifications', function (): void {
+            Notification::query()->delete();
         });
 
-        $this->components->task('Deleting demo invitations', function () use ($demoUser): void {
-            TeamInvitation::where('user_id', $demoUser->id)
-                ->orWhere('email', $demoUser->email)
-                ->delete();
-        });
-
-        $this->components->task('Cleaning up demo teams', function () use ($demoUser): void {
-            $nonPersonalTeams = $demoUser->teams()->where('is_personal', false)->get();
-
-            foreach ($nonPersonalTeams as $team) {
-                $demoUser->teams()->detach($team->id);
-
-                // Delete orphaned teams with no remaining users
-                if ($team->users()->count() === 0) {
-                    $team->delete();
-                }
-            }
-
-            // Also delete non-personal teams that were created for invitations
-            // (teams with invitation team_id referencing deleted invitations may be orphaned)
-            Team::where('is_personal', false)
-                ->whereDoesntHave('users')
-                ->delete();
-        });
-
-        $this->components->task('Removing terms acceptance', function () use ($demoUser): void {
+        $this->components->task('Removing demo terms acceptance', function () use ($demoUser): void {
             $demoUser->terms_agreements()->delete();
+        });
+
+        $this->components->task('Revoking demo Sanctum tokens', function () use ($demoUser): void {
+            $demoUser->tokens()->delete();
+        });
+    }
+
+    /**
+     * Delete teams with no remaining users (safety net for edge cases).
+     */
+    private function cleanOrphanedTeams(): void
+    {
+        $this->components->task('Cleaning orphaned teams', function (): void {
+            Team::whereDoesntHave('users')->delete();
+        });
+    }
+
+    /**
+     * Reset the demo user's credentials and profile to config defaults.
+     */
+    private function resetDemoUser(User $demoUser): void
+    {
+        $this->components->task('Resetting demo user credentials', function () use ($demoUser): void {
+            $demoUser->update([
+                'name' => config('demo.demo_user_name'),
+                'password' => config('demo.demo_user_password'),
+            ]);
+
+            [$first, $last] = explode(' ', $demoUser->name, 2);
+
+            $demoUser->profile->update([
+                'first_name' => $first,
+                'last_name' => $last ?? '',
+            ]);
         });
     }
 }
