@@ -19,6 +19,8 @@ class DatabaseSeeder extends Seeder
         $this->createTeamRoles();
         $this->createDemoUsers();
         $this->createDummyUsers();
+
+        $this->call(DemoSeeder::class);
     }
 
     /**
