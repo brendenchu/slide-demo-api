@@ -26,9 +26,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'ensure_terms_accepted' => \App\Http\Middleware\EnsureTermsAccepted::class,
         ]);
 
-        // Configure API CORS and Security Headers
+        // Configure API CORS, origin verification, and Security Headers
         $middleware->api(prepend: [
             \Illuminate\Http\Middleware\HandleCors::class,
+            \App\Http\Middleware\VerifyApiConsumer::class,
         ]);
 
         // Add security headers to all responses

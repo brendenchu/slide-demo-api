@@ -72,3 +72,73 @@ it('rate limit headers decrease with each request', function (): void {
     // Remaining should decrease
     expect((int) $remaining2)->toBeLessThan((int) $remaining1);
 });
+
+it('enforces login rate limit at 5 per minute', function (): void {
+    User::factory()->create([
+        'email' => 'test@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    // Make 5 login attempts - should all be processed (not 429)
+    for ($i = 1; $i <= 5; $i++) {
+        $response = $this->postJson('/api/v1/auth/login', [
+            'email' => 'test@example.com',
+            'password' => 'password',
+        ]);
+        expect($response->status())->not->toBe(429);
+    }
+
+    // 6th attempt should be rate limited
+    $response = $this->postJson('/api/v1/auth/login', [
+        'email' => 'test@example.com',
+        'password' => 'password',
+    ]);
+    $response->assertStatus(429);
+});
+
+it('enforces login rate limit per email to prevent credential stuffing', function (): void {
+    User::factory()->create([
+        'email' => 'target@example.com',
+        'password' => bcrypt('password'),
+    ]);
+
+    // Make 5 failed attempts against the same email
+    for ($i = 1; $i <= 5; $i++) {
+        $response = $this->postJson('/api/v1/auth/login', [
+            'email' => 'target@example.com',
+            'password' => 'wrong-password',
+        ]);
+        expect($response->status())->not->toBe(429);
+    }
+
+    // 6th attempt against same email should be rate limited
+    $response = $this->postJson('/api/v1/auth/login', [
+        'email' => 'target@example.com',
+        'password' => 'wrong-password',
+    ]);
+    $response->assertStatus(429);
+});
+
+it('enforces rate limit on public endpoints', function (): void {
+    // Make 30 requests - should all succeed
+    for ($i = 1; $i <= 30; $i++) {
+        $response = $this->getJson('/api/v1/names');
+        $response->assertSuccessful();
+    }
+
+    // 31st request should be rate limited
+    $response = $this->getJson('/api/v1/names');
+    $response->assertStatus(429);
+});
+
+it('enforces rate limit on demo status endpoint', function (): void {
+    // Make 30 requests - should all succeed
+    for ($i = 1; $i <= 30; $i++) {
+        $response = $this->getJson('/api/v1/demo/status');
+        $response->assertSuccessful();
+    }
+
+    // 31st request should be rate limited
+    $response = $this->getJson('/api/v1/demo/status');
+    $response->assertStatus(429);
+});

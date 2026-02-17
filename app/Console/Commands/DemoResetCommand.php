@@ -6,6 +6,7 @@ use App\Models\Account\Team;
 use App\Models\Notification;
 use App\Models\Story\Project;
 use App\Models\User;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 use Laravel\Sanctum\PersonalAccessToken;
@@ -57,7 +58,7 @@ class DemoResetCommand extends Command
         $this->resetDemoUser($demoUser);
 
         $this->components->info('Re-seeding demo data...');
-        $this->call('db:seed', ['--class' => 'Database\\Seeders\\DatabaseSeeder']);
+        $this->call('db:seed', ['--class' => DatabaseSeeder::class]);
 
         $this->components->info('Demo reset complete.');
 

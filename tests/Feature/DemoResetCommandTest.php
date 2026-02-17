@@ -5,6 +5,7 @@ use App\Models\Account\TeamInvitation;
 use App\Models\Notification;
 use App\Models\Story\Project;
 use App\Models\User;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -12,7 +13,7 @@ uses(TestCase::class, RefreshDatabase::class);
 
 beforeEach(function (): void {
     config()->set('demo.enabled', true);
-    $this->seed(\Database\Seeders\DatabaseSeeder::class);
+    $this->seed(DatabaseSeeder::class);
     $this->demoUser = User::where('email', config('demo.demo_user_email'))->first();
 });
 

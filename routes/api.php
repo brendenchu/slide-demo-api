@@ -34,18 +34,20 @@ use Illuminate\Support\Facades\Route;
 // API v1 Routes
 Route::prefix('v1')->group(function (): void {
 
-    // Public endpoints
-    Route::get('demo/status', DemoStatusController::class)->name('api.v1.demo.status');
-    Route::get('names', SafeNamesController::class)->name('api.v1.names');
+    // Public endpoints with rate limiting (30 per minute per IP)
+    Route::middleware('throttle:public')->group(function (): void {
+        Route::get('demo/status', DemoStatusController::class)->name('api.v1.demo.status');
+        Route::get('names', SafeNamesController::class)->name('api.v1.names');
+    });
 
-    // Public authentication routes with strict rate limiting (5 attempts per minute)
-    Route::prefix('auth')->middleware(['throttle:5,1', 'demo_limit'])->group(function (): void {
+    // Public authentication routes with strict rate limiting (5 per minute per IP + email)
+    Route::prefix('auth')->middleware(['throttle:auth', 'demo_limit'])->group(function (): void {
         Route::post('login', LoginController::class)->name('api.v1.auth.login');
         Route::post('register', RegisterController::class)->name('api.v1.auth.register');
     });
 
-    // Protected routes (require authentication) with standard rate limiting (60 per minute)
-    Route::middleware(['auth:sanctum', 'throttle:60,1', 'demo_limit', 'protect_demo_account'])->group(function (): void {
+    // Protected routes (require authentication) with standard rate limiting (60 per minute per user)
+    Route::middleware(['auth:sanctum', 'throttle:api', 'demo_limit', 'protect_demo_account'])->group(function (): void {
 
         // Routes that do NOT require terms acceptance
         Route::prefix('auth')->group(function (): void {
