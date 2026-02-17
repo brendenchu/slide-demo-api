@@ -22,7 +22,7 @@ return [
     'allowed_origins' => [
         'http://localhost:5173',  // Dev server (default)
         'http://localhost:5174',  // Dev server (alternate port)
-        env('FRONTEND_URL', ''),  // Production frontend URL
+        config('app.frontend_url'),  // Production frontend URL
     ],
 
     'allowed_origins_patterns' => [],
